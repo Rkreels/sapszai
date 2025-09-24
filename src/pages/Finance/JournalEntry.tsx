@@ -50,6 +50,7 @@ const JournalEntry: React.FC = () => {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [entryLines, setEntryLines] = useState<JournalEntryLine[]>([]);
+  const [isAddLineDialogOpen, setIsAddLineDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -229,6 +230,66 @@ const JournalEntry: React.FC = () => {
     }
   ];
 
+  const handleAddLine = () => {
+    setIsAddLineDialogOpen(true);
+  };
+
+  const handleValidate = () => {
+    const balance = entryLines.reduce((sum, line) => sum + line.debitAmount - line.creditAmount, 0);
+    if (balance === 0) {
+      toast({
+        title: 'Validation Successful',
+        description: 'Journal entry is balanced and ready for posting.',
+      });
+    } else {
+      toast({
+        title: 'Validation Failed',
+        description: `Journal entry is not balanced. Debits and credits differ by $${Math.abs(balance).toLocaleString()}.`,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSaveDraft = () => {
+    toast({
+      title: 'Draft Saved',
+      description: 'Journal entry draft has been saved successfully.',
+    });
+  };
+
+  const handlePostEntry = () => {
+    const balance = entryLines.reduce((sum, line) => sum + line.debitAmount - line.creditAmount, 0);
+    if (balance !== 0) {
+      toast({
+        title: 'Cannot Post',
+        description: 'Journal entry must be balanced before posting.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (entryLines.length === 0) {
+      toast({
+        title: 'Cannot Post',
+        description: 'Journal entry must have at least one line item.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Entry Posted',
+      description: 'Journal entry has been posted successfully.',
+    });
+  };
+
+  const handleUseTemplate = (templateName: string) => {
+    toast({
+      title: 'Template Applied',
+      description: `${templateName} template has been applied to the journal entry.`,
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="flex items-center mb-4">
@@ -355,7 +416,7 @@ const JournalEntry: React.FC = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">Journal Entry Lines</h3>
-                  <Button size="sm">
+                  <Button size="sm" onClick={handleAddLine}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Line
                   </Button>

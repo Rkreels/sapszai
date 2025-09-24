@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Search, FileText, Download, Filter, Calendar, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Search, FileText, Download, Filter, Calendar, Check, AlertCircle, ArrowLeft, Eye } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
@@ -25,12 +25,24 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import VoiceTrainingComponent from '../../components/procurement/VoiceTrainingComponent';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { Badge } from '../../components/ui/badge';
+import { useToast } from '../../hooks/use-toast';
 
 const BillingDocuments: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
   const [activeTab, setActiveTab] = useState('invoices');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [selectedCreditMemo, setSelectedCreditMemo] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isEnabled) {
@@ -78,6 +90,74 @@ const BillingDocuments: React.FC = () => {
     }
   };
 
+  const handleViewInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    toast({
+      title: 'Viewing Invoice',
+      description: `Opening invoice ${invoice.id}`,
+    });
+  };
+
+  const handleDownloadInvoice = (invoice: any) => {
+    toast({
+      title: 'Downloading Invoice',
+      description: `Downloading invoice ${invoice.id}`,
+    });
+  };
+
+  const handleViewCreditMemo = (memo: any) => {
+    setSelectedCreditMemo(memo);
+    toast({
+      title: 'Viewing Credit Memo',
+      description: `Opening credit memo ${memo.id}`,
+    });
+  };
+
+  const handleDownloadCreditMemo = (memo: any) => {
+    toast({
+      title: 'Downloading Credit Memo',
+      description: `Downloading credit memo ${memo.id}`,
+    });
+  };
+
+  const handleCreateInvoice = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleFilter = () => {
+    setIsFilterDialogOpen(true);
+  };
+
+  const handleBillingSchedule = () => {
+    toast({
+      title: 'Billing Schedule',
+      description: 'Opening billing schedule management',
+    });
+  };
+
+  const handleGenerateReport = (reportType: string) => {
+    toast({
+      title: 'Generating Report',
+      description: `Generating ${reportType} report...`,
+    });
+  };
+
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.orderRef.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = paymentStatusFilter === 'all' || 
+                         invoice.paymentStatus.toLowerCase().replace(' ', '') === paymentStatusFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredCreditMemos = creditMemos.filter(memo => {
+    const matchesSearch = memo.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         memo.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         memo.invoiceRef.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="flex items-center mb-4">
@@ -110,15 +190,15 @@ const BillingDocuments: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Billing Management</h2>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleFilter}>
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleBillingSchedule}>
             <Calendar className="h-4 w-4 mr-2" />
             Billing Schedule
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={handleCreateInvoice}>
             <FileText className="h-4 w-4 mr-2" />
             Create Invoice
           </Button>
@@ -138,10 +218,15 @@ const BillingDocuments: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="relative w-72">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search invoices..." className="pl-8" />
+                  <Input 
+                    placeholder="Search invoices..." 
+                    className="pl-8" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Select defaultValue="all">
+                  <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
                     <SelectTrigger className="w-[180px] h-9">
                       <SelectValue placeholder="Payment Status" />
                     </SelectTrigger>
@@ -171,7 +256,7 @@ const BillingDocuments: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map(invoice => (
+                    {filteredInvoices.map(invoice => (
                       <TableRow key={invoice.id}>
                         <TableCell>{invoice.id}</TableCell>
                         <TableCell>{invoice.customer}</TableCell>
@@ -187,11 +272,11 @@ const BillingDocuments: React.FC = () => {
                         <TableCell>{getPaymentStatusBadge(invoice.paymentStatus)}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <FileText className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoice)}>
+                              <Eye className="h-4 w-4" />
                               <span className="sr-only">View</span>
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleDownloadInvoice(invoice)}>
                               <Download className="h-4 w-4" />
                               <span className="sr-only">Download</span>
                             </Button>
@@ -212,7 +297,12 @@ const BillingDocuments: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="relative w-72">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search credit memos..." className="pl-8" />
+                  <Input 
+                    placeholder="Search credit memos..." 
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
               
@@ -231,7 +321,7 @@ const BillingDocuments: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {creditMemos.map(memo => (
+                    {filteredCreditMemos.map(memo => (
                       <TableRow key={memo.id}>
                         <TableCell>{memo.id}</TableCell>
                         <TableCell>{memo.customer}</TableCell>
@@ -247,11 +337,11 @@ const BillingDocuments: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <FileText className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" onClick={() => handleViewCreditMemo(memo)}>
+                              <Eye className="h-4 w-4" />
                               <span className="sr-only">View</span>
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleDownloadCreditMemo(memo)}>
                               <Download className="h-4 w-4" />
                               <span className="sr-only">Download</span>
                             </Button>
@@ -270,37 +360,37 @@ const BillingDocuments: React.FC = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Monthly Billing Summary')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Monthly Billing Summary</h3>
                   <p className="text-sm text-gray-500 mt-1">Overview of all billing activity by month</p>
                 </div>
                 
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Invoice Status Report')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Invoice Status Report</h3>
                   <p className="text-sm text-gray-500 mt-1">Track open, paid and overdue invoices</p>
                 </div>
                 
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Customer Billing Analysis')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Customer Billing Analysis</h3>
                   <p className="text-sm text-gray-500 mt-1">Billing trends by customer segment</p>
                 </div>
                 
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Credit Memo Analysis')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Credit Memo Analysis</h3>
                   <p className="text-sm text-gray-500 mt-1">Summary of credit memo reasons and amounts</p>
                 </div>
                 
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Revenue Recognition Report')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Revenue Recognition Report</h3>
                   <p className="text-sm text-gray-500 mt-1">Track when revenue is recognized</p>
                 </div>
                 
-                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="border rounded-md p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleGenerateReport('Tax Summary Report')}>
                   <FileText className="h-8 w-8 text-blue-500 mb-2" />
                   <h3 className="font-medium">Tax Summary Report</h3>
                   <p className="text-sm text-gray-500 mt-1">Summary of taxes collected by region</p>
@@ -310,6 +400,94 @@ const BillingDocuments: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Invoice</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customer">Customer</Label>
+                <Input id="customer" placeholder="Select customer" />
+              </div>
+              <div>
+                <Label htmlFor="orderRef">Order Reference</Label>
+                <Input id="orderRef" placeholder="Enter order reference" />
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount</Label>
+                <Input id="amount" type="number" placeholder="0.00" />
+              </div>
+              <div>
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input id="dueDate" type="date" />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" placeholder="Enter invoice description" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                toast({
+                  title: 'Invoice Created',
+                  description: 'New invoice has been created successfully.',
+                });
+                setIsCreateDialogOpen(false);
+              }}>
+                Create Invoice
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filter Invoices</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="dateFrom">Date From</Label>
+              <Input id="dateFrom" type="date" />
+            </div>
+            <div>
+              <Label htmlFor="dateTo">Date To</Label>
+              <Input id="dateTo" type="date" />
+            </div>
+            <div>
+              <Label htmlFor="minAmount">Min Amount</Label>
+              <Input id="minAmount" type="number" placeholder="0.00" />
+            </div>
+            <div>
+              <Label htmlFor="maxAmount">Max Amount</Label>
+              <Input id="maxAmount" type="number" placeholder="0.00" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                toast({
+                  title: 'Filter Applied',
+                  description: 'Invoice filters have been applied.',
+                });
+                setIsFilterDialogOpen(false);
+              }}>
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

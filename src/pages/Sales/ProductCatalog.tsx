@@ -2,110 +2,124 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/page/PageHeader';
-import { Card } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Input } from '../../components/ui/input';
-import { Search, Filter, Plus, Edit, Archive } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Search, Filter, Plus, Edit, Archive, Eye, Trash2, Settings, Upload, Download } from 'lucide-react';
 import DataTable from '../../components/data/DataTable';
 import { useToast } from '../../hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { useForm } from 'react-hook-form';
 
-// Sample product data
-const productsData = [
-  { 
-    id: "PROD-10001", 
-    name: "Professional Server Rack", 
-    category: "Hardware", 
-    price: "€2,450.00", 
-    stock: 24,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10002", 
-    name: "Enterprise Database License", 
-    category: "Software", 
-    price: "€12,850.00", 
-    stock: 150,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10003", 
-    name: "Network Security Firewall", 
-    category: "Security", 
-    price: "€8,750.00", 
-    stock: 12,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10004", 
-    name: "Cloud Storage Subscription (Monthly)", 
-    category: "Services", 
-    price: "€350.00", 
-    stock: 999,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10005", 
-    name: "Professional IT Support (Hours)", 
-    category: "Services", 
-    price: "€125.00", 
-    stock: 500,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10006", 
-    name: "High Performance Workstation", 
-    category: "Hardware", 
-    price: "€3,850.00", 
-    stock: 8,
-    status: "Low Stock"
-  },
-  { 
-    id: "PROD-10007", 
-    name: "Office Productivity Suite", 
-    category: "Software", 
-    price: "€450.00", 
-    stock: 200,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10008", 
-    name: "Server Maintenance Package", 
-    category: "Services", 
-    price: "€1,800.00", 
-    stock: 30,
-    status: "Active"
-  },
-  { 
-    id: "PROD-10009", 
-    name: "Network Switch 24-Port", 
-    category: "Hardware", 
-    price: "€950.00", 
-    stock: 0,
-    status: "Out of Stock"
-  },
-  { 
-    id: "PROD-10010", 
-    name: "Data Analytics Platform License", 
-    category: "Software", 
-    price: "€5,250.00", 
-    stock: 25,
-    status: "Active"
-  }
-];
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: string;
+  stock: number;
+  status: 'Active' | 'Low Stock' | 'Out of Stock' | 'Discontinued';
+  description?: string;
+  sku?: string;
+  weight?: string;
+  dimensions?: string;
+  supplier?: string;
+  cost?: string;
+  margin?: string;
+}
+
+interface ProductFormData {
+  name: string;
+  category: string;
+  price: string;
+  stock: string;
+  sku?: string;
+  description?: string;
+  weight?: string;
+  dimensions?: string;
+  supplier?: string;
+  cost?: string;
+}
 
 const ProductCatalog: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('products');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(productsData);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const form = useForm<ProductFormData>({
+    defaultValues: {
+      name: '',
+      category: '',
+      price: '',
+      stock: '',
+      sku: '',
+      description: '',
+      weight: '',
+      dimensions: '',
+      supplier: '',
+      cost: ''
+    }
+  });
+
+  // Sample product data
+  const initialProducts: Product[] = [
+    { 
+      id: "PROD-10001", 
+      name: "Professional Server Rack", 
+      category: "Hardware", 
+      price: "€2,450.00", 
+      stock: 24,
+      status: "Active",
+      sku: "HW-SR-001",
+      description: "42U server rack with cable management",
+      weight: "45 kg",
+      dimensions: "2000x600x1000 mm",
+      supplier: "TechSupplier Inc",
+      cost: "€1,850.00"
+    },
+    { 
+      id: "PROD-10002", 
+      name: "Enterprise Database License", 
+      category: "Software", 
+      price: "€12,850.00", 
+      stock: 150,
+      status: "Active",
+      sku: "SW-DBL-001",
+      description: "Enterprise database license for 100 users",
+      supplier: "Software Corp",
+      cost: "€8,500.00"
+    },
+    { 
+      id: "PROD-10003", 
+      name: "Network Security Firewall", 
+      category: "Security", 
+      price: "€8,750.00", 
+      stock: 12,
+      status: "Active",
+      sku: "SEC-FW-001",
+      description: "Next-generation firewall with UTM",
+      weight: "5 kg",
+      dimensions: "440x350x45 mm",
+      supplier: "Security Solutions Ltd",
+      cost: "€6,200.00"
+    }
+  ];
 
   useEffect(() => {
     // Simulate API loading
     const timer = setTimeout(() => {
+      setProducts(initialProducts);
+      setFilteredProducts(initialProducts);
       setIsLoading(false);
     }, 1000);
     
@@ -114,9 +128,9 @@ const ProductCatalog: React.FC = () => {
 
   useEffect(() => {
     if (searchTerm === '') {
-      setFilteredProducts(productsData);
+      setFilteredProducts(products);
     } else {
-      const filtered = productsData.filter(
+      const filtered = products.filter(
         product => 
           product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,21 +138,150 @@ const ProductCatalog: React.FC = () => {
       );
       setFilteredProducts(filtered);
     }
-  }, [searchTerm]);
+  }, [searchTerm, products]);
 
-  const handleCreateProduct = () => {
-    toast({
-      title: "Create Product",
-      description: "Product creation form has been opened.",
-    });
-    // In a real application, this would open a form or modal
+  const updateProductStatus = (product: Product): Product => {
+    let status: Product['status'] = 'Active';
+    if (product.stock === 0) {
+      status = 'Out of Stock';
+    } else if (product.stock < 10) {
+      status = 'Low Stock';
+    }
+    return { ...product, status };
   };
 
-  const handleEditProduct = (productId: string) => {
+  const handleCreateProduct = (data: ProductFormData) => {
+    const newProduct: Product = {
+      id: `PROD-${String(products.length + 1).padStart(5, '0')}`,
+      name: data.name,
+      category: data.category,
+      price: data.price,
+      stock: parseInt(data.stock),
+      status: 'Active',
+      sku: data.sku,
+      description: data.description,
+      weight: data.weight,
+      dimensions: data.dimensions,
+      supplier: data.supplier,
+      cost: data.cost,
+      margin: data.cost && data.price ? 
+        `${Math.round((parseFloat(data.price.replace('€', '').replace(',', '')) - parseFloat(data.cost.replace('€', '').replace(',', ''))) / parseFloat(data.cost.replace('€', '').replace(',', '')) * 100)}%` : 
+        undefined
+    };
+
+    const updatedProduct = updateProductStatus(newProduct);
+    setProducts([...products, updatedProduct]);
+    setIsCreateDialogOpen(false);
+    form.reset();
+    
     toast({
-      description: `Editing product ${productId}`,
+      title: "Product Created",
+      description: `${data.name} has been added to the catalog.`,
     });
-    // In a real application, this would open a form or modal
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    form.reset({
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      stock: product.stock.toString(),
+      sku: product.sku || '',
+      description: product.description || '',
+      weight: product.weight || '',
+      dimensions: product.dimensions || '',
+      supplier: product.supplier || '',
+      cost: product.cost || ''
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateProduct = (data: ProductFormData) => {
+    if (!selectedProduct) return;
+    
+    const updatedProduct: Product = {
+      ...selectedProduct,
+      name: data.name,
+      category: data.category,
+      price: data.price,
+      stock: parseInt(data.stock),
+      sku: data.sku,
+      description: data.description,
+      weight: data.weight,
+      dimensions: data.dimensions,
+      supplier: data.supplier,
+      cost: data.cost,
+      margin: data.cost && data.price ? 
+        `${Math.round((parseFloat(data.price.replace('€', '').replace(',', '')) - parseFloat(data.cost.replace('€', '').replace(',', ''))) / parseFloat(data.cost.replace('€', '').replace(',', '')) * 100)}%` : 
+        selectedProduct.margin
+    };
+
+    const finalProduct = updateProductStatus(updatedProduct);
+    setProducts(products.map(p => p.id === selectedProduct.id ? finalProduct : p));
+    setIsEditDialogOpen(false);
+    setSelectedProduct(null);
+    form.reset();
+    
+    toast({
+      title: "Product Updated",
+      description: `${data.name} has been updated.`,
+    });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      setProducts(products.filter(p => p.id !== productId));
+      toast({
+        title: "Product Deleted",
+        description: "Product has been removed from the catalog.",
+      });
+    }
+  };
+
+  const handleArchiveProduct = (productId: string) => {
+    setProducts(products.map(p => 
+      p.id === productId ? { ...p, status: 'Discontinued' as const } : p
+    ));
+    toast({
+      title: "Product Archived",
+      description: "Product has been archived.",
+    });
+  };
+
+  const handleImportProducts = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,.xlsx';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        toast({ 
+          title: 'Import Started', 
+          description: `Importing products from ${file.name}` 
+        });
+      }
+    };
+    input.click();
+  };
+
+  const handleExportProducts = () => {
+    const csvData = [
+      ['Product ID', 'Name', 'Category', 'Price', 'Stock', 'Status', 'SKU', 'Supplier'],
+      ...products.map(p => [p.id, p.name, p.category, p.price, p.stock, p.status, p.sku || '', p.supplier || ''])
+    ].map(row => row.join(',')).join('\n');
+    
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'products.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ 
+      title: 'Export Complete', 
+      description: 'Product catalog exported successfully' 
+    });
   };
 
   // Product columns configuration
@@ -159,15 +302,13 @@ const ProductCatalog: React.FC = () => {
     { 
       key: "status", 
       header: "Status",
-      render: (value: string) => (
-        <Badge variant={
-          value === 'Active' ? 'outline' : 
-          value === 'Low Stock' ? 'secondary' : 
-          'destructive'
-        }>
-          {value}
-        </Badge>
-      )
+      render: (value: string) => {
+        let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+        if (value === 'Out of Stock') variant = 'destructive';
+        if (value === 'Low Stock') variant = 'secondary';
+        if (value === 'Discontinued') variant = 'outline';
+        return <Badge variant={variant}>{value}</Badge>;
+      }
     },
     { 
       key: "actions", 
@@ -177,12 +318,35 @@ const ProductCatalog: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => handleEditProduct(row.id)}
+            onClick={() => {
+              toast({
+                title: "Product Details",
+                description: `Viewing details for ${row.name}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleEditProduct(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleArchiveProduct(row.id)}
+          >
             <Archive className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleDeleteProduct(row.id)}
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       )
@@ -217,14 +381,185 @@ const ProductCatalog: React.FC = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
+                <Button variant="outline" onClick={handleImportProducts}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import
                 </Button>
-                <Button onClick={handleCreateProduct}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
+                <Button variant="outline" onClick={handleExportProducts}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
                 </Button>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Product
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Add New Product</DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(handleCreateProduct)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Product Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="sku"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>SKU</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Hardware">Hardware</SelectItem>
+                                    <SelectItem value="Software">Software</SelectItem>
+                                    <SelectItem value="Services">Services</SelectItem>
+                                    <SelectItem value="Security">Security</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="supplier"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Supplier</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="price"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Price (€)</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="cost"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Cost (€)</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="stock"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Stock</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="weight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Weight</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="dimensions"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Dimensions</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Create Product</Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
