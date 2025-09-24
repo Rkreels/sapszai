@@ -1,12 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SAPSection from '../components/SAPSection';
 import SAPTile from '../components/SAPTile';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
+import { useVoiceAssistantContext } from '../context/VoiceAssistantContext';
+import { toast } from '../components/ui/use-toast';
 
 const HumanResources: React.FC = () => {
   const [isVoiceAssistantEnabled, setIsVoiceAssistantEnabled] = useState(false);
   const { speak } = useVoiceAssistant();
+  const { isEnabled } = useVoiceAssistantContext();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const checkVoiceAssistant = () => {
@@ -19,7 +24,19 @@ const HumanResources: React.FC = () => {
     };
     
     checkVoiceAssistant();
-  }, [speak]);
+  }, [speak, isEnabled]);
+
+  const handleTileClick = (path: string, title: string) => {
+    if (isEnabled) {
+      speak(`Opening ${title}`);
+    }
+    toast({
+      title: "Navigation",
+      description: `Opening ${title}...`,
+    });
+    // For now, we'll show a toast. In a real app, this would navigate to the specific page
+    // navigate(`/human-resources/${path}`);
+  };
 
   return (
     <div>
@@ -35,18 +52,21 @@ const HumanResources: React.FC = () => {
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Central hub for employee information and self-service."
           icon={<span className="text-xl">👥</span>}
+          onClick={() => handleTileClick('employee-central', 'Employee Central')}
         />
         <SAPTile 
           title="Organizational Management"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Define and maintain organizational structures."
           icon={<span className="text-xl">🏢</span>}
+          onClick={() => handleTileClick('organizational-management', 'Organizational Management')}
         />
         <SAPTile 
           title="Personnel Administration"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Manage employee master data and personal information."
           icon={<span className="text-xl">📋</span>}
+          onClick={() => handleTileClick('personnel-administration', 'Personnel Administration')}
         />
       </SAPSection>
 
@@ -60,18 +80,21 @@ const HumanResources: React.FC = () => {
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Record and track employee working hours."
           icon={<span className="text-xl">⏰</span>}
+          onClick={() => handleTileClick('time-recording', 'Time Recording')}
         />
         <SAPTile 
           title="Leave Management"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Manage employee vacation and leave requests."
           icon={<span className="text-xl">🏖️</span>}
+          onClick={() => handleTileClick('leave-management', 'Leave Management')}
         />
         <SAPTile 
           title="Shift Planning"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Plan and schedule employee shifts and rotations."
           icon={<span className="text-xl">📅</span>}
+          onClick={() => handleTileClick('shift-planning', 'Shift Planning')}
         />
       </SAPSection>
 
@@ -85,18 +108,21 @@ const HumanResources: React.FC = () => {
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Conduct performance reviews and goal management."
           icon={<span className="text-xl">🎯</span>}
+          onClick={() => handleTileClick('performance-management', 'Performance Management')}
         />
         <SAPTile 
           title="Learning & Development"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Manage training programs and skill development."
           icon={<span className="text-xl">📚</span>}
+          onClick={() => handleTileClick('learning-development', 'Learning & Development')}
         />
         <SAPTile 
           title="Succession Planning"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Plan for leadership succession and career development."
           icon={<span className="text-xl">🎖️</span>}
+          onClick={() => handleTileClick('succession-planning', 'Succession Planning')}
         />
       </SAPSection>
 
@@ -110,18 +136,21 @@ const HumanResources: React.FC = () => {
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Process employee payroll and salary calculations."
           icon={<span className="text-xl">💰</span>}
+          onClick={() => handleTileClick('payroll-processing', 'Payroll Processing')}
         />
         <SAPTile 
           title="Benefits Administration"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Manage employee benefits and insurance programs."
           icon={<span className="text-xl">🏥</span>}
+          onClick={() => handleTileClick('benefits-administration', 'Benefits Administration')}
         />
         <SAPTile 
           title="Compensation Management"
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Design and manage compensation structures."
           icon={<span className="text-xl">💼</span>}
+          onClick={() => handleTileClick('compensation-management', 'Compensation Management')}
         />
       </SAPSection>
     </div>

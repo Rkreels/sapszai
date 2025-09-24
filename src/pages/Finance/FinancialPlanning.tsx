@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
+import { useToast } from '../../hooks/use-toast';
 
 interface DataTableRow {
   id: string;
@@ -34,6 +35,7 @@ const FinancialPlanning: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState(null);
+  const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
@@ -121,6 +123,10 @@ const FinancialPlanning: React.FC = () => {
     setBudgets([...budgets, newBudget]);
     setIsCreateDialogOpen(false);
     form.reset();
+    toast({
+      title: 'Budget Created',
+      description: `${data.budgetName} has been created successfully.`,
+    });
   };
 
   const handleEdit = (budget: any) => {
@@ -152,10 +158,21 @@ const FinancialPlanning: React.FC = () => {
     ));
     setIsEditDialogOpen(false);
     setSelectedBudget(null);
+    toast({
+      title: 'Budget Updated',
+      description: `${data.budgetName} has been updated successfully.`,
+    });
   };
 
   const handleDelete = (id: string) => {
+    const budget = budgets.find(b => b.id === id);
     setBudgets(budgets.filter(b => b.id !== id));
+    if (budget) {
+      toast({
+        title: 'Budget Deleted',
+        description: `${budget.budgetName} has been deleted successfully.`,
+      });
+    }
   };
 
   const budgetColumns: Column[] = [
@@ -191,9 +208,36 @@ const FinancialPlanning: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => handleEdit(row)}><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)}><Trash2 className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Budget',
+                description: `Viewing details for budget ${row.budgetName}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleEdit(row)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.budgetName}?`)) {
+                handleDelete(row.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -232,9 +276,42 @@ const FinancialPlanning: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Forecast',
+                description: `Viewing details for ${row.scenario} forecast`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Edit Forecast',
+                description: `Editing ${row.scenario} forecast`,
+              });
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Download Forecast',
+                description: `Downloading ${row.scenario} forecast data`,
+              });
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -283,9 +360,42 @@ const FinancialPlanning: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Initiative',
+                description: `Viewing details for ${row.initiative}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Edit Initiative',
+                description: `Editing ${row.initiative}`,
+              });
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Download Initiative',
+                description: `Downloading ${row.initiative} details`,
+              });
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -370,7 +480,16 @@ const FinancialPlanning: React.FC = () => {
               <div className="flex justify-between items-center">
                 <CardTitle>Budget Management</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: 'Filter Options',
+                        description: 'Opening filter options for budgets',
+                      });
+                    }}
+                  >
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>

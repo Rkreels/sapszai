@@ -15,6 +15,11 @@ import Consolidation from './Finance/Consolidation';
 import BalanceSheet from './Finance/BalanceSheet';
 import JournalEntry from './Finance/JournalEntry';
 import ChartOfAccounts from './Finance/ChartOfAccounts';
+import ProfitCenterAccounting from './Finance/ProfitCenterAccounting';
+import FinancialPlanning from './Finance/FinancialPlanning';
+import Treasury from './Finance/Treasury';
+import FinanceCreditManagement from './Finance/FinanceCreditManagement';
+import FinancialReports from './Finance/FinancialReports';
 
 const FinanceRoutes: React.FC = () => {
   return (
@@ -33,6 +38,18 @@ const FinanceRoutes: React.FC = () => {
       <Route path="/balance-sheet" element={<BalanceSheet />} />
       <Route path="/journal-entry" element={<JournalEntry />} />
       <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
+      
+      {/* Task-specific submodules */}
+      <Route path="/profit-center-accounting" element={<ProfitCenterAccounting />} />
+      <Route path="/financial-planning" element={<FinancialPlanning />} />
+      <Route path="/treasury" element={<Treasury />} />
+      <Route path="/credit-management" element={<FinanceCreditManagement />} />
+      <Route path="/financial-reports" element={<FinancialReports />} />
+      
+      {/* Additional Finance routes */}
+      <Route path="/bank-accounts" element={<Treasury />} />
+      <Route path="/asset-accounting" element={<FixedAssets />} />
+      <Route path="/cost-center" element={<CostAccounting />} />
       
       {/* Additional Finance routes */}
       <Route path="/ledger-line-items" element={<GeneralLedger />} />

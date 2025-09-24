@@ -5,13 +5,22 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { ArrowLeft, Plus, Edit, Eye, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Eye, CreditCard, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
 import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import EnhancedDataTable, { EnhancedColumn, TableAction } from '../../components/data/EnhancedDataTable';
 import { useToast } from '../../hooks/use-toast';
 import VoiceTrainingComponent from '../../components/procurement/VoiceTrainingComponent';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { listEntities, upsertEntity, removeEntity, generateId } from '../../lib/localCrud';
 
 interface Invoice {
   id: string;
@@ -26,13 +35,36 @@ interface Invoice {
   description: string;
 }
 
+const invoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, 'Invoice number is required'),
+  vendor: z.string().min(1, 'Vendor is required'),
+  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  currency: z.string().min(1, 'Currency is required'),
+  dueDate: z.string().min(1, 'Due date is required'),
+  invoiceDate: z.string().min(1, 'Invoice date is required'),
+  purchaseOrder: z.string().min(1, 'Purchase order is required'),
+  description: z.string().min(1, 'Description is required'),
+});
+
+const STORAGE_KEY = 'accounts_payable_invoices';
+
 const AccountsPayable: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
   const [activeTab, setActiveTab] = useState('invoices');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof invoiceSchema>>({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: {
+      currency: 'USD',
+      invoiceDate: new Date().toISOString().split('T')[0],
+    },
+  });
 
   useEffect(() => {
     if (isEnabled) {
@@ -41,34 +73,47 @@ const AccountsPayable: React.FC = () => {
   }, [isEnabled, speak]);
 
   useEffect(() => {
-    const sampleInvoices: Invoice[] = [
-      {
-        id: 'inv-001',
-        invoiceNumber: 'INV-2025-001',
-        vendor: 'Dell Technologies',
-        amount: 15000.00,
-        currency: 'USD',
-        status: 'Approved',
-        dueDate: '2025-02-15',
-        invoiceDate: '2025-01-20',
-        purchaseOrder: 'PO-2025-001',
-        description: 'Laptop computers - IT Equipment'
-      },
-      {
-        id: 'inv-002',
-        invoiceNumber: 'INV-2025-002',
-        vendor: 'Office Depot',
-        amount: 850.00,
-        currency: 'USD',
-        status: 'Pending',
-        dueDate: '2025-02-10',
-        invoiceDate: '2025-01-25',
-        purchaseOrder: 'PO-2025-002',
-        description: 'Office supplies and stationery'
-      }
-    ];
-    setInvoices(sampleInvoices);
+    loadData();
   }, []);
+
+  const loadData = () => {
+    const storedInvoices = listEntities<Invoice>(STORAGE_KEY);
+    
+    if (storedInvoices.length === 0) {
+      // Seed with sample data
+      const sampleInvoices: Invoice[] = [
+        {
+          id: generateId('inv'),
+          invoiceNumber: 'INV-2025-001',
+          vendor: 'Dell Technologies',
+          amount: 15000.00,
+          currency: 'USD',
+          status: 'Approved',
+          dueDate: '2025-02-15',
+          invoiceDate: '2025-01-20',
+          purchaseOrder: 'PO-2025-001',
+          description: 'Laptop computers - IT Equipment'
+        },
+        {
+          id: generateId('inv'),
+          invoiceNumber: 'INV-2025-002',
+          vendor: 'Office Depot',
+          amount: 850.00,
+          currency: 'USD',
+          status: 'Pending',
+          dueDate: '2025-02-10',
+          invoiceDate: '2025-01-25',
+          purchaseOrder: 'PO-2025-002',
+          description: 'Office supplies and stationery'
+        }
+      ];
+      
+      sampleInvoices.forEach(invoice => upsertEntity<Invoice>(STORAGE_KEY, invoice));
+      setInvoices(sampleInvoices);
+    } else {
+      setInvoices(storedInvoices);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -79,6 +124,111 @@ const AccountsPayable: React.FC = () => {
       'Disputed': 'bg-purple-100 text-purple-800'
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const onSubmit = (data: z.infer<typeof invoiceSchema>) => {
+    try {
+      const newInvoice: Invoice = {
+        id: generateId('inv'),
+        ...data,
+        status: 'Pending',
+      };
+
+      upsertEntity<Invoice>(STORAGE_KEY, newInvoice);
+      setInvoices(prev => [...prev, newInvoice]);
+      
+      toast({
+        title: 'Invoice Created',
+        description: `Invoice ${data.invoiceNumber} has been created successfully.`,
+      });
+      
+      setIsCreateDialogOpen(false);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create invoice.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const onEdit = (data: z.infer<typeof invoiceSchema>) => {
+    if (!editingInvoice) return;
+    
+    try {
+      const updatedInvoice = { ...editingInvoice, ...data };
+      upsertEntity<Invoice>(STORAGE_KEY, updatedInvoice);
+      setInvoices(prev => prev.map(invoice => 
+        invoice.id === editingInvoice.id ? updatedInvoice : invoice
+      ));
+      
+      toast({
+        title: 'Invoice Updated',
+        description: `Invoice ${data.invoiceNumber} has been updated.`,
+      });
+      
+      setEditingInvoice(null);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update invoice.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteInvoice = (invoice: Invoice) => {
+    if (confirm(`Are you sure you want to delete invoice ${invoice.invoiceNumber}?`)) {
+      try {
+        removeEntity(STORAGE_KEY, invoice.id);
+        setInvoices(prev => prev.filter(inv => inv.id !== invoice.id));
+        
+        toast({
+          title: 'Invoice Deleted',
+          description: `Invoice ${invoice.invoiceNumber} has been deleted.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete invoice.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const updateInvoiceStatus = (invoice: Invoice, newStatus: Invoice['status']) => {
+    try {
+      const updatedInvoice = { ...invoice, status: newStatus };
+      upsertEntity<Invoice>(STORAGE_KEY, updatedInvoice);
+      setInvoices(prev => prev.map(inv => inv.id === invoice.id ? updatedInvoice : inv));
+      
+      toast({
+        title: 'Status Updated',
+        description: `Invoice ${invoice.invoiceNumber} status changed to ${newStatus}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update invoice status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processPayment = (invoice: Invoice) => {
+    if (invoice.status !== 'Approved') {
+      toast({
+        title: 'Cannot Process Payment',
+        description: 'Only approved invoices can be processed for payment.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    updateInvoiceStatus(invoice, 'Paid');
   };
 
   const columns: EnhancedColumn[] = [
@@ -125,15 +275,42 @@ const AccountsPayable: React.FC = () => {
       variant: 'ghost'
     },
     {
+      label: 'Edit',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (row: Invoice) => {
+        setEditingInvoice(row);
+        form.reset({
+          invoiceNumber: row.invoiceNumber,
+          vendor: row.vendor,
+          amount: row.amount,
+          currency: row.currency,
+          dueDate: row.dueDate,
+          invoiceDate: row.invoiceDate,
+          purchaseOrder: row.purchaseOrder,
+          description: row.description,
+        });
+        setIsCreateDialogOpen(true);
+      },
+      variant: 'ghost',
+      condition: (row: Invoice) => row.status !== 'Paid'
+    },
+    {
       label: 'Process Payment',
       icon: <CreditCard className="h-4 w-4" />,
       onClick: (row: Invoice) => {
-        toast({
-          title: 'Process Payment',
-          description: `Processing payment for ${row.invoiceNumber}`,
-        });
+        processPayment(row);
       },
-      variant: 'ghost'
+      variant: 'ghost',
+      condition: (row: Invoice) => row.status === 'Approved'
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: (row: Invoice) => {
+        deleteInvoice(row);
+      },
+      variant: 'ghost',
+      condition: (row: Invoice) => row.status !== 'Paid'
     }
   ];
 
@@ -215,10 +392,156 @@ const AccountsPayable: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Invoice Management
-                <Button onClick={() => toast({ title: 'Create Invoice', description: 'Opening invoice entry form' })}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Invoice
-                </Button>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => {
+                      setEditingInvoice(null);
+                      form.reset();
+                    }}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Invoice
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(editingInvoice ? onEdit : onSubmit)} className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="invoiceNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Invoice Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="INV-2025-001" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="vendor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Vendor</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Vendor name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="amount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Amount</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.01" 
+                                  placeholder="0.00" 
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="currency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Currency</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select currency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">EUR</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                  <SelectItem value="JPY">JPY</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="dueDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Due Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="invoiceDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Invoice Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="purchaseOrder"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Purchase Order</FormLabel>
+                              <FormControl>
+                                <Input placeholder="PO-2025-001" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Invoice description" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">
+                            {editingInvoice ? 'Update' : 'Create'}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -250,11 +573,11 @@ const AccountsPayable: React.FC = () => {
                         <p className="text-sm">Amount: ${invoice.amount.toLocaleString()} | Due: {invoice.dueDate}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => updateInvoiceStatus(invoice, 'Approved')}>
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Approve Payment
                         </Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => processPayment(invoice)}>
                           <CreditCard className="h-4 w-4 mr-2" />
                           Pay Now
                         </Button>

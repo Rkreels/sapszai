@@ -292,7 +292,20 @@ const ProjectPlanning: React.FC = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      render: () => <Button variant="outline" size="sm">Use Template</Button>
+      render: () => (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            toast({
+              title: 'Use Template',
+              description: 'Using template to create new project plan',
+            });
+          }}
+        >
+          Use Template
+        </Button>
+      )
     }
   ];
 
@@ -324,7 +337,15 @@ const ProjectPlanning: React.FC = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      render: () => <Button variant="outline" size="sm">Edit</Button>
+      render: (_, row) => (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => handleEditPlan(row)}
+        >
+          Edit
+        </Button>
+      )
     }
   ];
 
@@ -362,7 +383,12 @@ const ProjectPlanning: React.FC = () => {
                 <h3 className="text-lg font-semibold">Project Plans</h3>
               </div>
               <p className="text-gray-600 mb-4">Create and manage comprehensive project plans</p>
-              <Button className="w-full">Create New Plan</Button>
+              <Button 
+                  className="w-full"
+                  onClick={handleCreatePlan}
+                >
+                  Create New Plan
+                </Button>
             </Card>
 
             <Card className="p-6">
@@ -371,7 +397,18 @@ const ProjectPlanning: React.FC = () => {
                 <h3 className="text-lg font-semibold">Schedule Planning</h3>
               </div>
               <p className="text-gray-600 mb-4">Define project timelines and milestones</p>
-              <Button variant="outline" className="w-full">Plan Schedule</Button>
+              <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    toast({
+                      title: 'Plan Schedule',
+                      description: 'Opening schedule planning interface',
+                    });
+                  }}
+                >
+                  Plan Schedule
+                </Button>
             </Card>
 
             <Card className="p-6">
@@ -380,7 +417,18 @@ const ProjectPlanning: React.FC = () => {
                 <h3 className="text-lg font-semibold">Resource Planning</h3>
               </div>
               <p className="text-gray-600 mb-4">Allocate and plan project resources</p>
-              <Button variant="outline" className="w-full">Plan Resources</Button>
+              <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    toast({
+                      title: 'Plan Resources',
+                      description: 'Opening resource planning interface',
+                    });
+                  }}
+                >
+                  Plan Resources
+                </Button>
             </Card>
           </div>
 
@@ -398,7 +446,16 @@ const ProjectPlanning: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Project Templates</h3>
-              <Button>Create Template</Button>
+              <Button 
+                onClick={() => {
+                  toast({
+                    title: 'Create Template',
+                    description: 'Opening template creation form',
+                  });
+                }}
+              >
+                Create Template
+              </Button>
             </div>
               <EnhancedDataTable 
                 columns={templateColumns}
@@ -458,6 +515,138 @@ const ProjectPlanning: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Project Plan Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? 'Edit Project Plan' : 'Create New Project Plan'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="planName">Plan Name</Label>
+                <Input 
+                  id="planName" 
+                  placeholder="Enter plan name" 
+                  defaultValue={selectedPlan?.name || ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="planId">Plan ID</Label>
+                <Input 
+                  id="planId" 
+                  placeholder="Auto-generated" 
+                  value={selectedPlan?.planId || `PLAN-${String(projectPlans.length + 1).padStart(3, '0')}`}
+                  disabled
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                placeholder="Enter plan description" 
+                defaultValue={selectedPlan?.description || ''}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input 
+                  id="startDate" 
+                  type="date" 
+                  defaultValue={selectedPlan?.startDate || ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="endDate">End Date</Label>
+                <Input 
+                  id="endDate" 
+                  type="date" 
+                  defaultValue={selectedPlan?.endDate || ''}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="estimatedCost">Estimated Cost</Label>
+                <Input 
+                  id="estimatedCost" 
+                  type="number" 
+                  placeholder="0" 
+                  defaultValue={selectedPlan?.estimatedCost || 0}
+                />
+              </div>
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select defaultValue={selectedPlan?.priority || 'Medium'}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="projectManager">Project Manager</Label>
+                <Input 
+                  id="projectManager" 
+                  placeholder="Enter project manager" 
+                  defaultValue={selectedPlan?.projectManager || ''}
+                />
+              </div>
+              <div>
+                <Label htmlFor="sponsor">Sponsor</Label>
+                <Input 
+                  id="sponsor" 
+                  placeholder="Enter sponsor" 
+                  defaultValue={selectedPlan?.sponsor || ''}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  const formData = {
+                    name: (document.getElementById('planName') as HTMLInputElement)?.value || '',
+                    description: (document.getElementById('description') as HTMLTextAreaElement)?.value || '',
+                    startDate: (document.getElementById('startDate') as HTMLInputElement)?.value || '',
+                    endDate: (document.getElementById('endDate') as HTMLInputElement)?.value || '',
+                    estimatedCost: parseFloat((document.getElementById('estimatedCost') as HTMLInputElement)?.value || '0'),
+                    priority: (document.getElementById('priority') as HTMLSelectElement)?.value || 'Medium',
+                    projectManager: (document.getElementById('projectManager') as HTMLInputElement)?.value || '',
+                    sponsor: (document.getElementById('sponsor') as HTMLInputElement)?.value || '',
+                    status: 'Draft'
+                  };
+                  handleSavePlan(formData);
+                }}
+              >
+                {isEditing ? 'Update Plan' : 'Create Plan'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

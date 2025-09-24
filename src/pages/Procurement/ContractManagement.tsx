@@ -211,7 +211,14 @@ const ContractManagement: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Contract Portfolio
-                <Button onClick={() => toast({ title: 'Create Contract', description: 'Opening contract creation form' })}>
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: 'Create Contract',
+                      description: 'Opening contract creation form',
+                    });
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Create Contract
                 </Button>
@@ -248,11 +255,28 @@ const ContractManagement: React.FC = () => {
                         <p className="text-sm">Expires: {contract.endDate}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            toast({
+                              title: 'Schedule Renewal',
+                              description: `Scheduling renewal for ${contract.title}`,
+                            });
+                          }}
+                        >
                           <Calendar className="h-4 w-4 mr-2" />
                           Schedule Renewal
                         </Button>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => {
+                            toast({
+                              title: 'Renew Contract',
+                              description: `Renewing contract ${contract.contractNumber}`,
+                            });
+                          }}
+                        >
                           Renew Now
                         </Button>
                       </div>

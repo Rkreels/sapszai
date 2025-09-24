@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
+import { useToast } from '../../hooks/use-toast';
 
 interface DataTableRow {
   id: string;
@@ -34,6 +35,7 @@ const ProfitCenterAccounting: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedProfitCenter, setSelectedProfitCenter] = useState(null);
+  const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
@@ -129,6 +131,10 @@ const ProfitCenterAccounting: React.FC = () => {
     setProfitCenters([...profitCenters, newProfitCenter]);
     setIsCreateDialogOpen(false);
     form.reset();
+    toast({
+      title: 'Profit Center Created',
+      description: `${data.profitCenterCode} - ${data.name} has been created successfully.`,
+    });
   };
 
   const handleEdit = (profitCenter: any) => {
@@ -160,6 +166,10 @@ const ProfitCenterAccounting: React.FC = () => {
     ));
     setIsEditDialogOpen(false);
     setSelectedProfitCenter(null);
+    toast({
+      title: 'Profit Center Updated',
+      description: `${data.profitCenterCode} has been updated successfully.`,
+    });
   };
 
   const handleDelete = (id: string) => {
@@ -198,9 +208,40 @@ const ProfitCenterAccounting: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => handleEdit(row)}><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)}><Trash2 className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Profit Center',
+                description: `Viewing details for ${row.profitCenterCode}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleEdit(row)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.profitCenterCode}?`)) {
+                handleDelete(row.id);
+                toast({
+                  title: 'Profit Center Deleted',
+                  description: `${row.profitCenterCode} has been deleted successfully.`,
+                });
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -253,9 +294,42 @@ const ProfitCenterAccounting: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Transfer',
+                description: `Viewing details for transfer ${row.id}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Edit Transfer',
+                description: `Editing transfer ${row.id}`,
+              });
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'Download Transfer',
+                description: `Downloading transfer ${row.id} details`,
+              });
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -340,7 +414,16 @@ const ProfitCenterAccounting: React.FC = () => {
               <div className="flex justify-between items-center">
                 <CardTitle>Profit Center Management</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: 'Filter Options',
+                        description: 'Opening filter options for profit centers',
+                      });
+                    }}
+                  >
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>

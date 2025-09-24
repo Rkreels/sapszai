@@ -9,11 +9,13 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../hooks/use-toast';
 
 const MaterialMaster: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isEnabled) {
@@ -123,7 +125,12 @@ const MaterialMaster: React.FC = () => {
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Material Records</h2>
-        <Button>
+        <Button onClick={() => {
+          toast({
+            title: 'Create Material',
+            description: 'Opening material creation form',
+          });
+        }}>
           <Plus className="h-4 w-4 mr-2" />
           Create Material
         </Button>

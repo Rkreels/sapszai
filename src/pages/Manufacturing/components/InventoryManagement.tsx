@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../../components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Badge } from '../../../components/ui/badge';
+import { useToast } from '../../../components/ui/use-toast';
 
 interface InventoryItem {
   id: string;
@@ -79,6 +80,7 @@ const InventoryManagement = () => {
   const [isAddMaterialDialogOpen, setIsAddMaterialDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<MaterialFormData>({
     defaultValues: {
@@ -119,6 +121,11 @@ const InventoryManagement = () => {
     setInventoryData([...inventoryData, updatedItem]);
     setIsAddMaterialDialogOpen(false);
     form.reset();
+    
+    toast({
+      title: 'Material Added',
+      description: `Material ${data.material} has been added successfully.`,
+    });
   };
 
   const handleEditItem = (item: InventoryItem) => {
@@ -158,10 +165,21 @@ const InventoryManagement = () => {
     setIsEditDialogOpen(false);
     setSelectedItem(null);
     form.reset();
+    
+    toast({
+      title: 'Material Updated',
+      description: `Material ${data.material} has been updated successfully.`,
+    });
   };
 
   const handleDeleteItem = (id: string) => {
-    setInventoryData(inventoryData.filter(item => item.id !== id));
+    if (confirm('Are you sure you want to delete this item?')) {
+      setInventoryData(inventoryData.filter(item => item.id !== id));
+      toast({
+        title: 'Item Deleted',
+        description: 'Inventory item has been deleted successfully.',
+      });
+    }
   };
 
   // Column definitions for the inventory table
@@ -187,7 +205,12 @@ const InventoryManagement = () => {
       header: 'Actions',
       render: (_: string, row: any) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => alert(`Viewing details for ${row.material}`)}>
+          <Button variant="outline" size="sm" onClick={() => {
+            toast({
+              title: 'View Material Details',
+              description: `Opening details for material ${row.material}`,
+            });
+          }}>
             <Eye className="h-3 w-3" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => handleEditItem(row)}>

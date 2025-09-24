@@ -105,6 +105,16 @@ const Finance: React.FC = () => {
               <ArrowRight className="h-4 w-4" />
             </button>
             <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
+                    onClick={() => handleNavigation('profit-center-accounting')}>
+              <span>Profit Center Accounting</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
+                    onClick={() => handleNavigation('financial-planning')}>
+              <span>Financial Planning</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
                     onClick={() => handleNavigation('consolidation')}>
               <span>Consolidation</span>
               <ArrowRight className="h-4 w-4" />
@@ -127,6 +137,16 @@ const Finance: React.FC = () => {
               <ArrowRight className="h-4 w-4" />
             </button>
             <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
+                    onClick={() => handleNavigation('treasury')}>
+              <span>Treasury</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
+                    onClick={() => handleNavigation('credit-management')}>
+              <span>Credit Management</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
                     onClick={() => handleNavigation('tax-management')}>
               <span>Tax Management</span>
               <ArrowRight className="h-4 w-4" />
@@ -146,6 +166,11 @@ const Finance: React.FC = () => {
             <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
                     onClick={() => handleNavigation('financial-reporting')}>
               <span>Financial Reporting</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button className="w-full text-left py-2 px-3 hover:bg-gray-50 rounded text-sm font-medium flex items-center justify-between"
+                    onClick={() => handleNavigation('financial-reports')}>
+              <span>Financial Reports</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

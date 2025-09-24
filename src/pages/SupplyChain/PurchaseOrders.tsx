@@ -4,9 +4,10 @@ import { Button } from '../../components/ui/button';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import PageHeader from '../../components/page/PageHeader';
-import { ArrowLeft, Calendar, Filter, Download, Plus, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, Filter, Download, Plus, FileText, Edit, Eye } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../hooks/use-toast';
 
 interface DataTableRow {
   id: string;
@@ -23,6 +24,7 @@ const PurchaseOrders: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (isEnabled) {
@@ -110,8 +112,22 @@ const PurchaseOrders: React.FC = () => {
       header: 'Actions',
       render: (_, row: any) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">View</Button>
-          <Button variant="outline" size="sm">Edit</Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            toast({
+              title: 'View Purchase Order',
+              description: `Opening purchase order ${row.po}`,
+            });
+          }}>
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            toast({
+              title: 'Edit Purchase Order',
+              description: `Editing purchase order ${row.po}`,
+            });
+          }}>
+            <Edit className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -141,19 +157,39 @@ const PurchaseOrders: React.FC = () => {
           <p className="text-sm text-gray-500">May 2025</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" className="flex items-center">
+          <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
+            toast({
+              title: 'Change Period',
+              description: 'Opening period selection dialog',
+            });
+          }}>
             <Calendar className="h-4 w-4 mr-2" />
             Change Period
           </Button>
-          <Button variant="outline" size="sm" className="flex items-center">
+          <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
+            toast({
+              title: 'Filter Options',
+              description: 'Opening filter panel',
+            });
+          }}>
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" size="sm" className="flex items-center">
+          <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
+            toast({
+              title: 'Export Data',
+              description: 'Exporting purchase orders to CSV',
+            });
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button variant="default" size="sm" className="flex items-center">
+          <Button variant="default" size="sm" className="flex items-center" onClick={() => {
+            toast({
+              title: 'New Purchase Order',
+              description: 'Opening purchase order creation form',
+            });
+          }}>
             <Plus className="h-4 w-4 mr-2" />
             New Purchase Order
           </Button>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
-import { Search, Plus, Download, UploadCloud, Filter } from 'lucide-react';
+import { Search, Plus, Download, UploadCloud, Filter, Edit, Eye } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Separator } from '../../components/ui/separator';
 import { 
@@ -16,9 +16,11 @@ import {
 } from '../../components/ui/table';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useToast } from '../../hooks/use-toast';
 
 const PricingManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState('priceLists');
+  const { toast } = useToast();
 
   const priceLists = [
     { id: 'PL001', name: 'Standard Retail Pricing', items: 234, validFrom: '2025-01-01', validTo: '2025-12-31', status: 'Active' },
@@ -41,19 +43,45 @@ const PricingManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Pricing Management</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            toast({
+              title: 'Filter Applied',
+              description: 'Filter options panel opened',
+            });
+          }}>
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.xlsx';
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0];
+              if (file) {
+                toast({ title: 'Import Started', description: `Importing pricing data from ${file.name}` });
+              }
+            };
+            input.click();
+          }}>
             <UploadCloud className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            toast({
+              title: 'Export Started',
+              description: 'Exporting pricing data to CSV',
+            });
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => {
+            toast({
+              title: 'Create New Price List',
+              description: 'Opening price list creation form',
+            });
+          }}>
             <Plus className="h-4 w-4 mr-2" />
             Create New
           </Button>
@@ -122,7 +150,14 @@ const PricingManagement: React.FC = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">View</Button>
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            toast({
+                              title: 'View Price List',
+                              description: `Opening price list ${list.name}`,
+                            });
+                          }}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -183,7 +218,14 @@ const PricingManagement: React.FC = () => {
                         <TableCell>{condition.validFrom}</TableCell>
                         <TableCell>{condition.validTo}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">Edit</Button>
+                          <Button variant="ghost" size="sm" onClick={() => {
+                            toast({
+                              title: 'Edit Pricing Condition',
+                              description: `Editing condition ${condition.id}`,
+                            });
+                          }}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -199,7 +241,14 @@ const PricingManagement: React.FC = () => {
             <CardContent className="pt-6 text-center p-20">
               <h3 className="text-lg font-medium mb-2">Pricing Procedures Configuration</h3>
               <p className="text-muted-foreground mb-6">Configure sequence and rules for applying pricing conditions</p>
-              <Button>Configure Pricing Procedures</Button>
+              <Button onClick={() => {
+                toast({
+                  title: 'Configure Pricing Procedures',
+                  description: 'Opening pricing procedures configuration panel',
+                });
+              }}>
+                Configure Pricing Procedures
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

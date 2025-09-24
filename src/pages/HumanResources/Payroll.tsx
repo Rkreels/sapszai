@@ -9,11 +9,13 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../hooks/use-toast';
 
 const Payroll: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isEnabled) {
@@ -135,7 +137,12 @@ const Payroll: React.FC = () => {
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Payroll Records</h2>
-        <Button>
+        <Button onClick={() => {
+          toast({
+            title: 'Process Payroll',
+            description: 'Starting payroll processing for current period',
+          });
+        }}>
           <Plus className="h-4 w-4 mr-2" />
           Process Payroll
         </Button>

@@ -205,7 +205,14 @@ const CatalogManagement: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Catalog Items
-                <Button onClick={() => toast({ title: 'Add Item', description: 'Opening item creation form' })}>
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: 'Add Item',
+                      description: 'Opening item creation form',
+                    });
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Item
                 </Button>
@@ -240,11 +247,29 @@ const CatalogManagement: React.FC = () => {
                       </Badge>
                     </div>
                     <div className="mt-2 flex space-x-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          toast({
+                            title: 'Edit Category',
+                            description: `Editing category ${category}`,
+                          });
+                        }}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          toast({
+                            title: 'View Category',
+                            description: `Viewing details for category ${category}`,
+                          });
+                        }}
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
@@ -275,7 +300,16 @@ const CatalogManagement: React.FC = () => {
                         <span>Scheduled Updates:</span>
                         <span className="font-medium">3</span>
                       </div>
-                      <Button size="sm" className="w-full mt-2">
+                      <Button 
+                        size="sm" 
+                        className="w-full mt-2"
+                        onClick={() => {
+                          toast({
+                            title: 'Bulk Price Update',
+                            description: 'Opening bulk price update form',
+                          });
+                        }}
+                      >
                         Bulk Price Update
                       </Button>
                     </div>
@@ -291,7 +325,17 @@ const CatalogManagement: React.FC = () => {
                         <span>Price Stability:</span>
                         <span className="font-medium">High</span>
                       </div>
-                      <Button size="sm" className="w-full mt-2" variant="outline">
+                        <Button 
+                        size="sm" 
+                        className="w-full mt-2" 
+                        variant="outline"
+                        onClick={() => {
+                          toast({
+                            title: 'View Report',
+                            description: 'Opening price analytics report',
+                          });
+                        }}
+                      >
                         View Report
                       </Button>
                     </div>
