@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { ArrowLeft, Plus, Edit, Trash2, Eye, Download, Upload, CreditCard, Building, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Eye, Download, Upload, CreditCard, Building, TrendingUp, DollarSign, RefreshCw } from 'lucide-react';
 import PageHeader from '../../components/page/PageHeader';
 import DataTable, { Column } from '../../components/data/DataTable';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
 import { useForm } from 'react-hook-form';
+import { useToast } from '../../hooks/use-toast';
 
 interface Column {
   key: string;
@@ -76,6 +77,7 @@ const BankAccounts: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -519,26 +521,30 @@ const BankAccounts: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Bank Reconciliation Status</CardTitle>
+                <CardTitle className="flex justify-between items-center">
+                  Bank Reconciliation Status
+                  <Button size="sm" onClick={() => toast({ title: 'Start Reconciliation', description: 'Opening reconciliation wizard' })}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start Reconciliation
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>May 2024 - BA-001</span>
-                    <Badge variant="default">Reconciled</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>May 2024 - BA-002</span>
-                    <Badge variant="secondary">Pending</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>May 2024 - BA-003</span>
-                    <Badge variant="default">Reconciled</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>April 2024 - BA-001</span>
-                    <Badge variant="default">Reconciled</Badge>
-                  </div>
+                  {bankAccounts.map(account => (
+                    <div key={account.id} className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">{account.bankName}</div>
+                        <div className="text-sm text-muted-foreground">{account.accountType}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default">Reconciled</Badge>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -568,6 +574,88 @@ const BankAccounts: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                Reconciliation History
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Report
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <div>Account</div>
+                  <div>Period</div>
+                  <div>Status</div>
+                  <div>Actions</div>
+                </div>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">BA-001</div>
+                    <div className="text-muted-foreground">Deutsche Bank</div>
+                  </div>
+                  <div>May 2024</div>
+                  <div>
+                    <Badge variant="default">Reconciled</Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">BA-002</div>
+                    <div className="text-muted-foreground">HSBC Holdings</div>
+                  </div>
+                  <div>May 2024</div>
+                  <div>
+                    <Badge variant="secondary">Pending</Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">BA-003</div>
+                    <div className="text-muted-foreground">JPMorgan Chase</div>
+                  </div>
+                  <div>May 2024</div>
+                  <div>
+                    <Badge variant="default">Reconciled</Badge>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

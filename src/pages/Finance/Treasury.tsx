@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { useForm } from 'react-hook-form';
 import { 
   ArrowLeft, 
   Plus, 
@@ -19,7 +22,10 @@ import {
   Edit,
   Trash2,
   Download,
-  RefreshCw
+  RefreshCw,
+  ArrowRight,
+  Calendar,
+  FileText
 } from 'lucide-react';
 import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
@@ -60,6 +66,28 @@ interface Investment {
   status: 'Active' | 'Matured' | 'Redeemed';
 }
 
+interface InternalTransfer {
+  id: string;
+  transferId: string;
+  fromAccount: string;
+  toAccount: string;
+  amount: number;
+  currency: string;
+  transferDate: string;
+  status: 'Pending' | 'Completed' | 'Failed';
+  description: string;
+  reference: string;
+}
+
+interface TransferForm {
+  fromAccount: string;
+  toAccount: string;
+  amount: number;
+  currency: string;
+  transferDate: string;
+  description: string;
+}
+
 const Treasury: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
@@ -68,8 +96,21 @@ const Treasury: React.FC = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [cashPositions, setCashPositions] = useState<CashPosition[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [transfers, setTransfers] = useState<InternalTransfer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const transferForm = useForm<TransferForm>({
+    defaultValues: {
+      fromAccount: '',
+      toAccount: '',
+      amount: 0,
+      currency: 'USD',
+      transferDate: new Date().toISOString().split('T')[0],
+      description: ''
+    }
+  });
 
   useEffect(() => {
     if (isEnabled) {
@@ -152,9 +193,37 @@ const Treasury: React.FC = () => {
       }
     ];
 
+    const sampleTransfers: InternalTransfer[] = [
+      {
+        id: 'tr-001',
+        transferId: 'TRF-2025-001',
+        fromAccount: 'ba-001',
+        toAccount: 'ba-002',
+        amount: 100000,
+        currency: 'USD',
+        transferDate: '2025-01-28',
+        status: 'Completed',
+        description: 'Monthly cash allocation',
+        reference: 'REF-001'
+      },
+      {
+        id: 'tr-002',
+        transferId: 'TRF-2025-002',
+        fromAccount: 'ba-002',
+        toAccount: 'ba-001',
+        amount: 50000,
+        currency: 'USD',
+        transferDate: '2025-01-29',
+        status: 'Pending',
+        description: 'Operating expense funding',
+        reference: 'REF-002'
+      }
+    ];
+
     setBankAccounts(sampleBankAccounts);
     setCashPositions(sampleCashPositions);
     setInvestments(sampleInvestments);
+    setTransfers(sampleTransfers);
     setIsLoading(false);
   };
 
@@ -163,6 +232,43 @@ const Treasury: React.FC = () => {
     toast({
       title: 'Data Refreshed',
       description: 'Treasury data has been updated successfully.',
+    });
+  };
+
+  const handleCreateTransfer = (data: TransferForm) => {
+    if (data.fromAccount === data.toAccount) {
+      toast({
+        title: 'Invalid Transfer',
+        description: 'Source and destination accounts cannot be the same.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const fromAccount = bankAccounts.find(acc => acc.id === data.fromAccount);
+    if (!fromAccount || fromAccount.balance < data.amount) {
+      toast({
+        title: 'Insufficient Funds',
+        description: 'Source account does not have sufficient balance for this transfer.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const newTransfer: InternalTransfer = {
+      id: `tr-${String(transfers.length + 1).padStart(3, '0')}`,
+      transferId: `TRF-${new Date().getFullYear()}-${String(transfers.length + 1).padStart(3, '0')}`,
+      ...data,
+      status: 'Pending',
+      reference: `REF-${String(transfers.length + 1).padStart(3, '0')}`
+    };
+
+    setTransfers([...transfers, newTransfer]);
+    setIsTransferDialogOpen(false);
+    transferForm.reset();
+    toast({
+      title: 'Transfer Created',
+      description: 'Internal transfer has been created and is pending processing.',
     });
   };
 
@@ -259,6 +365,46 @@ const Treasury: React.FC = () => {
   const totalInvestments = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
   const todayCashPosition = cashPositions[0] || { netPosition: 0, inflows: 0, outflows: 0 };
 
+  const transferColumns: EnhancedColumn[] = [
+    { key: 'transferId', header: 'Transfer ID', searchable: true },
+    { 
+      key: 'fromAccount', 
+      header: 'From Account',
+      render: (value: string) => {
+        const account = bankAccounts.find(acc => acc.id === value);
+        return account ? `${account.bankName} (${account.accountType})` : value;
+      }
+    },
+    { 
+      key: 'toAccount', 
+      header: 'To Account',
+      render: (value: string) => {
+        const account = bankAccounts.find(acc => acc.id === value);
+        return account ? `${account.bankName} (${account.accountType})` : value;
+      }
+    },
+    { 
+      key: 'amount', 
+      header: 'Amount',
+      render: (value: number, row: InternalTransfer) => `${row.currency} ${value.toLocaleString()}`
+    },
+    { key: 'transferDate', header: 'Date', sortable: true },
+    { 
+      key: 'status', 
+      header: 'Status',
+      render: (value: string) => (
+        <Badge className={
+          value === 'Completed' ? 'bg-green-100 text-green-800' :
+          value === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'
+        }>
+          {value}
+        </Badge>
+      )
+    },
+    { key: 'description', header: 'Description', searchable: true }
+  ];
+
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="flex items-center mb-4">
@@ -336,9 +482,10 @@ const Treasury: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="accounts">Bank Accounts</TabsTrigger>
+          <TabsTrigger value="transfers">Internal Transfers</TabsTrigger>
           <TabsTrigger value="investments">Investments</TabsTrigger>
           <TabsTrigger value="forecasting">Cash Forecasting</TabsTrigger>
         </TabsList>
@@ -418,6 +565,162 @@ const Treasury: React.FC = () => {
                 data={bankAccounts}
                 actions={bankAccountActions}
                 searchPlaceholder="Search bank accounts..."
+                exportable={true}
+                refreshable={true}
+                onRefresh={refreshData}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transfers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                Internal Transfer Management
+                <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Transfer
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Create Internal Transfer</DialogTitle>
+                    </DialogHeader>
+                    <Form {...transferForm}>
+                      <form onSubmit={transferForm.handleSubmit(handleCreateTransfer)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={transferForm.control}
+                            name="fromAccount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>From Account</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select source account" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {bankAccounts.map(account => (
+                                      <SelectItem key={account.id} value={account.id}>
+                                        {account.bankName} - {account.accountType} ({account.currency} {account.balance.toLocaleString()})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={transferForm.control}
+                            name="toAccount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>To Account</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select destination account" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {bankAccounts.map(account => (
+                                      <SelectItem key={account.id} value={account.id}>
+                                        {account.bankName} - {account.accountType} ({account.currency} {account.balance.toLocaleString()})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={transferForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={transferForm.control}
+                            name="currency"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Currency</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select currency" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="EUR">EUR</SelectItem>
+                                    <SelectItem value="GBP">GBP</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={transferForm.control}
+                          name="transferDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Transfer Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={transferForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsTransferDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Create Transfer</Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EnhancedDataTable 
+                columns={transferColumns}
+                data={transfers}
+                searchPlaceholder="Search transfers..."
                 exportable={true}
                 refreshable={true}
                 onRefresh={refreshData}

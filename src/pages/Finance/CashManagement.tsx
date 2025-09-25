@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { useForm } from 'react-hook-form';
 import { 
   ArrowLeft, 
   Plus, 
@@ -62,6 +65,25 @@ interface PaymentTransaction {
   processedDate?: string;
 }
 
+interface CashFlowForm {
+  date: string;
+  description: string;
+  type: 'Inflow' | 'Outflow';
+  amount: number;
+  category: string;
+  account: string;
+  status: 'Planned' | 'Actual' | 'Forecasted';
+}
+
+interface PaymentForm {
+  vendor: string;
+  amount: number;
+  currency: string;
+  paymentMethod: 'Wire Transfer' | 'ACH' | 'Check' | 'Credit Card';
+  scheduledDate: string;
+  description: string;
+}
+
 const CashManagement: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
@@ -70,7 +92,32 @@ const CashManagement: React.FC = () => {
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [bankPositions, setBankPositions] = useState<BankPosition[]>([]);
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
+  const [isCashFlowDialogOpen, setIsCashFlowDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const cashFlowForm = useForm<CashFlowForm>({
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      type: 'Inflow',
+      amount: 0,
+      category: '',
+      account: '',
+      status: 'Planned'
+    }
+  });
+
+  const paymentForm = useForm<PaymentForm>({
+    defaultValues: {
+      vendor: '',
+      amount: 0,
+      currency: 'USD',
+      paymentMethod: 'Wire Transfer',
+      scheduledDate: new Date().toISOString().split('T')[0],
+      description: ''
+    }
+  });
 
   useEffect(() => {
     if (isEnabled) {
@@ -196,6 +243,36 @@ const CashManagement: React.FC = () => {
     setCashFlows(sampleCashFlows);
     setBankPositions(sampleBankPositions);
     setPayments(samplePayments);
+  };
+
+  const handleAddCashFlow = (data: CashFlowForm) => {
+    const newCashFlow: CashFlow = {
+      id: `cf-${String(cashFlows.length + 1).padStart(3, '0')}`,
+      ...data
+    };
+    setCashFlows([...cashFlows, newCashFlow]);
+    setIsCashFlowDialogOpen(false);
+    cashFlowForm.reset();
+    toast({
+      title: 'Cash Flow Added',
+      description: 'New cash flow entry has been successfully added.'
+    });
+  };
+
+  const handleProcessPayment = (data: PaymentForm) => {
+    const newPayment: PaymentTransaction = {
+      id: `pt-${String(payments.length + 1).padStart(3, '0')}`,
+      paymentId: `PAY-${new Date().getFullYear()}-${String(payments.length + 1).padStart(3, '0')}`,
+      ...data,
+      status: 'Pending'
+    };
+    setPayments([...payments, newPayment]);
+    setIsPaymentDialogOpen(false);
+    paymentForm.reset();
+    toast({
+      title: 'Payment Processed',
+      description: 'Payment has been successfully processed and scheduled.'
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -430,10 +507,165 @@ const CashManagement: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Cash Flow Management
-                <Button onClick={() => toast({ title: 'Add Cash Flow', description: 'Opening cash flow entry form' })}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entry
-                </Button>
+                <Dialog open={isCashFlowDialogOpen} onOpenChange={setIsCashFlowDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Entry
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Add Cash Flow Entry</DialogTitle>
+                    </DialogHeader>
+                    <Form {...cashFlowForm}>
+                      <form onSubmit={cashFlowForm.handleSubmit(handleAddCashFlow)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="type"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Inflow">Inflow</SelectItem>
+                                    <SelectItem value="Outflow">Outflow</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={cashFlowForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Sales Revenue">Sales Revenue</SelectItem>
+                                    <SelectItem value="Operating Expenses">Operating Expenses</SelectItem>
+                                    <SelectItem value="Payroll">Payroll</SelectItem>
+                                    <SelectItem value="Interest Expense">Interest Expense</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="account"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Account</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select account" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {bankPositions.map(pos => (
+                                      <SelectItem key={pos.id} value={pos.accountType}>
+                                        {pos.bankName} - {pos.accountType}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={cashFlowForm.control}
+                            name="status"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Planned">Planned</SelectItem>
+                                    <SelectItem value="Actual">Actual</SelectItem>
+                                    <SelectItem value="Forecasted">Forecasted</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsCashFlowDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Add Entry</Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -476,10 +708,131 @@ const CashManagement: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Payment Processing
-                <Button onClick={() => toast({ title: 'Process Payment', description: 'Opening payment processing form' })}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Process Payment
-                </Button>
+                <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Process Payment
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Process Payment</DialogTitle>
+                    </DialogHeader>
+                    <Form {...paymentForm}>
+                      <form onSubmit={paymentForm.handleSubmit(handleProcessPayment)} className="space-y-4">
+                        <FormField
+                          control={paymentForm.control}
+                          name="vendor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Vendor</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={paymentForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={paymentForm.control}
+                            name="currency"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Currency</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select currency" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="EUR">EUR</SelectItem>
+                                    <SelectItem value="GBP">GBP</SelectItem>
+                                    <SelectItem value="JPY">JPY</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={paymentForm.control}
+                            name="paymentMethod"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Payment Method</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select method" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Wire Transfer">Wire Transfer</SelectItem>
+                                    <SelectItem value="ACH">ACH</SelectItem>
+                                    <SelectItem value="Check">Check</SelectItem>
+                                    <SelectItem value="Credit Card">Credit Card</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={paymentForm.control}
+                            name="scheduledDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Scheduled Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={paymentForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit">Process Payment</Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
