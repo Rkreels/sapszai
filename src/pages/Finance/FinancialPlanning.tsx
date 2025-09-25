@@ -107,6 +107,37 @@ const FinancialPlanning: React.FC = () => {
     { id: 'PL-004', initiative: 'Product Development', category: 'Innovation', budget: 3000000, timeline: '24 months', roi: 12.8, status: 'Planning', priority: 'High' }
   ]);
 
+  // Forecast form state
+  const [isForecastDialogOpen, setIsForecastDialogOpen] = useState(false);
+  const [isEditForecastDialogOpen, setIsEditForecastDialogOpen] = useState(false);
+  const [selectedForecast, setSelectedForecast] = useState(null);
+  
+  const forecastForm = useForm({
+    defaultValues: {
+      scenario: '',
+      period: '',
+      revenue: '',
+      expenses: '',
+      confidence: ''
+    }
+  });
+
+  // Strategic planning form state
+  const [isPlanningDialogOpen, setIsPlanningDialogOpen] = useState(false);
+  const [isEditPlanningDialogOpen, setIsEditPlanningDialogOpen] = useState(false);
+  const [selectedPlanning, setSelectedPlanning] = useState(null);
+  
+  const planningForm = useForm({
+    defaultValues: {
+      initiative: '',
+      category: '',
+      budget: '',
+      timeline: '',
+      roi: '',
+      priority: ''
+    }
+  });
+
   const handleCreate = (data: any) => {
     const newBudget = {
       id: `BUD-${String(budgets.length + 1).padStart(3, '0')}`,
@@ -171,6 +202,140 @@ const FinancialPlanning: React.FC = () => {
       toast({
         title: 'Budget Deleted',
         description: `${budget.budgetName} has been deleted successfully.`,
+      });
+    }
+  };
+
+  // Forecast CRUD operations
+  const handleCreateForecast = (data: any) => {
+    const newForecast = {
+      id: `FC-${String(forecasts.length + 1).padStart(3, '0')}`,
+      scenario: data.scenario,
+      period: data.period,
+      revenue: parseFloat(data.revenue),
+      expenses: parseFloat(data.expenses),
+      profit: parseFloat(data.revenue) - parseFloat(data.expenses),
+      margin: ((parseFloat(data.revenue) - parseFloat(data.expenses)) / parseFloat(data.revenue)) * 100,
+      confidence: parseInt(data.confidence)
+    };
+    setForecasts([...forecasts, newForecast]);
+    setIsForecastDialogOpen(false);
+    forecastForm.reset();
+    toast({
+      title: 'Forecast Created',
+      description: `${data.scenario} forecast has been created successfully.`,
+    });
+  };
+
+  const handleEditForecast = (forecast: any) => {
+    setSelectedForecast(forecast);
+    forecastForm.reset({
+      scenario: forecast.scenario,
+      period: forecast.period,
+      revenue: forecast.revenue.toString(),
+      expenses: forecast.expenses.toString(),
+      confidence: forecast.confidence.toString()
+    });
+    setIsEditForecastDialogOpen(true);
+  };
+
+  const handleUpdateForecast = (data: any) => {
+    setForecasts(forecasts.map(f => 
+      f.id === selectedForecast?.id 
+        ? { 
+            ...f, 
+            scenario: data.scenario,
+            period: data.period,
+            revenue: parseFloat(data.revenue),
+            expenses: parseFloat(data.expenses),
+            profit: parseFloat(data.revenue) - parseFloat(data.expenses),
+            margin: ((parseFloat(data.revenue) - parseFloat(data.expenses)) / parseFloat(data.revenue)) * 100,
+            confidence: parseInt(data.confidence)
+          } 
+        : f
+    ));
+    setIsEditForecastDialogOpen(false);
+    setSelectedForecast(null);
+    toast({
+      title: 'Forecast Updated',
+      description: `${data.scenario} forecast has been updated successfully.`,
+    });
+  };
+
+  const handleDeleteForecast = (id: string) => {
+    const forecast = forecasts.find(f => f.id === id);
+    setForecasts(forecasts.filter(f => f.id !== id));
+    if (forecast) {
+      toast({
+        title: 'Forecast Deleted',
+        description: `${forecast.scenario} forecast has been deleted successfully.`,
+      });
+    }
+  };
+
+  // Strategic Planning CRUD operations
+  const handleCreatePlanning = (data: any) => {
+    const newPlanning = {
+      id: `PL-${String(planning.length + 1).padStart(3, '0')}`,
+      initiative: data.initiative,
+      category: data.category,
+      budget: parseFloat(data.budget),
+      timeline: data.timeline,
+      roi: parseFloat(data.roi),
+      status: 'Planning',
+      priority: data.priority
+    };
+    setPlanning([...planning, newPlanning]);
+    setIsPlanningDialogOpen(false);
+    planningForm.reset();
+    toast({
+      title: 'Initiative Created',
+      description: `${data.initiative} has been created successfully.`,
+    });
+  };
+
+  const handleEditPlanning = (plan: any) => {
+    setSelectedPlanning(plan);
+    planningForm.reset({
+      initiative: plan.initiative,
+      category: plan.category,
+      budget: plan.budget.toString(),
+      timeline: plan.timeline,
+      roi: plan.roi.toString(),
+      priority: plan.priority
+    });
+    setIsEditPlanningDialogOpen(true);
+  };
+
+  const handleUpdatePlanning = (data: any) => {
+    setPlanning(planning.map(p => 
+      p.id === selectedPlanning?.id 
+        ? { 
+            ...p, 
+            initiative: data.initiative,
+            category: data.category,
+            budget: parseFloat(data.budget),
+            timeline: data.timeline,
+            roi: parseFloat(data.roi),
+            priority: data.priority
+          } 
+        : p
+    ));
+    setIsEditPlanningDialogOpen(false);
+    setSelectedPlanning(null);
+    toast({
+      title: 'Initiative Updated',
+      description: `${data.initiative} has been updated successfully.`,
+    });
+  };
+
+  const handleDeletePlanning = (id: string) => {
+    const plan = planning.find(p => p.id === id);
+    setPlanning(planning.filter(p => p.id !== id));
+    if (plan) {
+      toast({
+        title: 'Initiative Deleted',
+        description: `${plan.initiative} has been deleted successfully.`,
       });
     }
   };
@@ -291,14 +456,20 @@ const FinancialPlanning: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => {
-              toast({
-                title: 'Edit Forecast',
-                description: `Editing ${row.scenario} forecast`,
-              });
-            }}
+            onClick={() => handleEditForecast(row)}
           >
             <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.scenario} forecast?`)) {
+                handleDeleteForecast(row.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 
@@ -375,14 +546,20 @@ const FinancialPlanning: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => {
-              toast({
-                title: 'Edit Initiative',
-                description: `Editing ${row.initiative}`,
-              });
-            }}
+            onClick={() => handleEditPlanning(row)}
           >
             <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.initiative}?`)) {
+                handleDeletePlanning(row.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 
@@ -620,10 +797,239 @@ const FinancialPlanning: React.FC = () => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Financial Forecasts</CardTitle>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Forecast
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: 'Filter Forecasts',
+                        description: 'Opening filter options for forecasts',
+                      });
+                    }}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                  <Dialog open={isForecastDialogOpen} onOpenChange={setIsForecastDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Forecast
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Forecast</DialogTitle>
+                      </DialogHeader>
+                      <Form {...forecastForm}>
+                        <form onSubmit={forecastForm.handleSubmit(handleCreateForecast)} className="space-y-4">
+                          <FormField
+                            control={forecastForm.control}
+                            name="scenario"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Scenario Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Base Case, Optimistic, Conservative" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="period"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Forecast Period</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select period" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="2024-Q1">2024 Q1</SelectItem>
+                                    <SelectItem value="2024-Q2">2024 Q2</SelectItem>
+                                    <SelectItem value="2024-Q3">2024 Q3</SelectItem>
+                                    <SelectItem value="2024-Q4">2024 Q4</SelectItem>
+                                    <SelectItem value="2025-Q1">2025 Q1</SelectItem>
+                                    <SelectItem value="2025-Q2">2025 Q2</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="revenue"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected Revenue ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="expenses"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected Expenses ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="confidence"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confidence Level (%)</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select confidence" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="50">50% - Low Confidence</SelectItem>
+                                    <SelectItem value="65">65% - Medium-Low Confidence</SelectItem>
+                                    <SelectItem value="75">75% - Medium Confidence</SelectItem>
+                                    <SelectItem value="85">85% - Medium-High Confidence</SelectItem>
+                                    <SelectItem value="95">95% - High Confidence</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsForecastDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Create Forecast</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  {/* Edit Forecast Dialog */}
+                  <Dialog open={isEditForecastDialogOpen} onOpenChange={setIsEditForecastDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Forecast</DialogTitle>
+                      </DialogHeader>
+                      <Form {...forecastForm}>
+                        <form onSubmit={forecastForm.handleSubmit(handleUpdateForecast)} className="space-y-4">
+                          <FormField
+                            control={forecastForm.control}
+                            name="scenario"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Scenario Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="period"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Forecast Period</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select period" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="2024-Q1">2024 Q1</SelectItem>
+                                    <SelectItem value="2024-Q2">2024 Q2</SelectItem>
+                                    <SelectItem value="2024-Q3">2024 Q3</SelectItem>
+                                    <SelectItem value="2024-Q4">2024 Q4</SelectItem>
+                                    <SelectItem value="2025-Q1">2025 Q1</SelectItem>
+                                    <SelectItem value="2025-Q2">2025 Q2</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="revenue"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected Revenue ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="expenses"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected Expenses ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={forecastForm.control}
+                            name="confidence"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confidence Level (%)</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select confidence" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="50">50% - Low Confidence</SelectItem>
+                                    <SelectItem value="65">65% - Medium-Low Confidence</SelectItem>
+                                    <SelectItem value="75">75% - Medium Confidence</SelectItem>
+                                    <SelectItem value="85">85% - Medium-High Confidence</SelectItem>
+                                    <SelectItem value="95">95% - High Confidence</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsEditForecastDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Update Forecast</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -637,10 +1043,259 @@ const FinancialPlanning: React.FC = () => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Strategic Initiatives</CardTitle>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Initiative
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: 'Filter Initiatives',
+                        description: 'Opening filter options for initiatives',
+                      });
+                    }}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                  <Dialog open={isPlanningDialogOpen} onOpenChange={setIsPlanningDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Initiative
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Strategic Initiative</DialogTitle>
+                      </DialogHeader>
+                      <Form {...planningForm}>
+                        <form onSubmit={planningForm.handleSubmit(handleCreatePlanning)} className="space-y-4">
+                          <FormField
+                            control={planningForm.control}
+                            name="initiative"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Initiative Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Digital Transformation" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Strategic">Strategic</SelectItem>
+                                    <SelectItem value="Growth">Growth</SelectItem>
+                                    <SelectItem value="Efficiency">Efficiency</SelectItem>
+                                    <SelectItem value="Innovation">Innovation</SelectItem>
+                                    <SelectItem value="Compliance">Compliance</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="budget"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Budget ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="timeline"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Timeline</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., 12 months, 2 years" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="roi"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected ROI (%)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="priority"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Priority</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select priority" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="High">High</SelectItem>
+                                    <SelectItem value="Medium">Medium</SelectItem>
+                                    <SelectItem value="Low">Low</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsPlanningDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Create Initiative</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  {/* Edit Planning Dialog */}
+                  <Dialog open={isEditPlanningDialogOpen} onOpenChange={setIsEditPlanningDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Strategic Initiative</DialogTitle>
+                      </DialogHeader>
+                      <Form {...planningForm}>
+                        <form onSubmit={planningForm.handleSubmit(handleUpdatePlanning)} className="space-y-4">
+                          <FormField
+                            control={planningForm.control}
+                            name="initiative"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Initiative Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Strategic">Strategic</SelectItem>
+                                    <SelectItem value="Growth">Growth</SelectItem>
+                                    <SelectItem value="Efficiency">Efficiency</SelectItem>
+                                    <SelectItem value="Innovation">Innovation</SelectItem>
+                                    <SelectItem value="Compliance">Compliance</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="budget"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Budget ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="timeline"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Timeline</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="roi"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expected ROI (%)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={planningForm.control}
+                            name="priority"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Priority</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select priority" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="High">High</SelectItem>
+                                    <SelectItem value="Medium">Medium</SelectItem>
+                                    <SelectItem value="Low">Low</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsEditPlanningDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Update Initiative</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent>

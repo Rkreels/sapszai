@@ -97,6 +97,29 @@ const FinanceCreditManagement: React.FC = () => {
     }
   });
 
+  // Credit Application form state
+  const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
+  const [isEditApplicationDialogOpen, setIsEditApplicationDialogOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<CreditApplication | null>(null);
+
+  interface CreditApplicationForm {
+    customer: string;
+    requestedLimit: string;
+    currentLimit: string;
+    riskScore: string;
+    reviewer: string;
+  }
+
+  const applicationForm = useForm<CreditApplicationForm>({
+    defaultValues: {
+      customer: '',
+      requestedLimit: '',
+      currentLimit: '',
+      riskScore: '',
+      reviewer: ''
+    }
+  });
+
   const [customers, setCustomers] = useState<Customer[]>([
     { id: 'CUS-001', name: 'ABC Manufacturing Ltd', creditLimit: '500,000', utilized: '425,000', available: '75,000', riskRating: 'AAA', paymentTerms: '30 days', overdue: '0', dso: '28', status: 'Active' },
     { id: 'CUS-002', name: 'Global Tech Solutions', creditLimit: '1,000,000', utilized: '750,000', available: '250,000', riskRating: 'AA+', paymentTerms: '45 days', overdue: '25,000', dso: '42', status: 'Watch' },
@@ -169,6 +192,101 @@ const FinanceCreditManagement: React.FC = () => {
 
   const handleDelete = (id: string) => {
     setCustomers(customers.filter(c => c.id !== id));
+  };
+
+  // Credit Application CRUD operations
+  const handleCreateApplication = (data: CreditApplicationForm) => {
+    const newApplication: CreditApplication = {
+      id: `APP-${String(creditApplications.length + 1).padStart(3, '0')}`,
+      customer: data.customer,
+      requestedLimit: data.requestedLimit,
+      currentLimit: data.currentLimit,
+      riskScore: data.riskScore,
+      submittedDate: new Date().toISOString().split('T')[0],
+      reviewer: data.reviewer,
+      status: 'Under Review'
+    };
+    setCreditApplications([...creditApplications, newApplication]);
+    setIsApplicationDialogOpen(false);
+    applicationForm.reset();
+    toast({
+      title: 'Application Created',
+      description: `Credit application for ${data.customer} has been created successfully.`,
+    });
+  };
+
+  const handleEditApplication = (application: CreditApplication) => {
+    setSelectedApplication(application);
+    applicationForm.reset({
+      customer: application.customer,
+      requestedLimit: application.requestedLimit,
+      currentLimit: application.currentLimit,
+      riskScore: application.riskScore,
+      reviewer: application.reviewer
+    });
+    setIsEditApplicationDialogOpen(true);
+  };
+
+  const handleUpdateApplication = (data: CreditApplicationForm) => {
+    setCreditApplications(creditApplications.map(app => 
+      app.id === selectedApplication?.id 
+        ? { 
+            ...app, 
+            customer: data.customer,
+            requestedLimit: data.requestedLimit,
+            currentLimit: data.currentLimit,
+            riskScore: data.riskScore,
+            reviewer: data.reviewer
+          } 
+        : app
+    ));
+    setIsEditApplicationDialogOpen(false);
+    setSelectedApplication(null);
+    toast({
+      title: 'Application Updated',
+      description: `Credit application for ${data.customer} has been updated successfully.`,
+    });
+  };
+
+  const handleDeleteApplication = (id: string) => {
+    const application = creditApplications.find(app => app.id === id);
+    setCreditApplications(creditApplications.filter(app => app.id !== id));
+    if (application) {
+      toast({
+        title: 'Application Deleted',
+        description: `Credit application for ${application.customer} has been deleted.`,
+      });
+    }
+  };
+
+  const handleApproveApplication = (id: string) => {
+    setCreditApplications(creditApplications.map(app => 
+      app.id === id 
+        ? { ...app, status: 'Approved' as const } 
+        : app
+    ));
+    const application = creditApplications.find(app => app.id === id);
+    if (application) {
+      toast({
+        title: 'Application Approved',
+        description: `Credit application for ${application.customer} has been approved.`,
+      });
+    }
+  };
+
+  const handleRejectApplication = (id: string) => {
+    setCreditApplications(creditApplications.map(app => 
+      app.id === id 
+        ? { ...app, status: 'Rejected' as const } 
+        : app
+    ));
+    const application = creditApplications.find(app => app.id === id);
+    if (application) {
+      toast({
+        title: 'Application Rejected',
+        description: `Credit application for ${application.customer} has been rejected.`,
+      });
+    }
   };
 
   const customerColumns: Column[] = [
@@ -274,8 +392,72 @@ const FinanceCreditManagement: React.FC = () => {
       header: 'Actions',
       render: (_: string | number, row: RenderableRow) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: 'View Application',
+                description: `Viewing details for application ${row.id}`,
+              });
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleEditApplication(row)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (row.status !== 'Approved') {
+                handleApproveApplication(row.id);
+              } else {
+                toast({
+                  title: 'Already Approved',
+                  description: 'This application is already approved.',
+                  variant: 'destructive'
+                });
+              }
+            }}
+            disabled={row.status === 'Approved'}
+          >
+            <TrendingUp className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (row.status !== 'Rejected') {
+                handleRejectApplication(row.id);
+              } else {
+                toast({
+                  title: 'Already Rejected',
+                  description: 'This application is already rejected.',
+                  variant: 'destructive'
+                });
+              }
+            }}
+            disabled={row.status === 'Rejected'}
+          >
+            <AlertTriangle className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete application ${row.id}?`)) {
+                handleDeleteApplication(row.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       )
     }

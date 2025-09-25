@@ -112,6 +112,118 @@ const Treasury: React.FC = () => {
     }
   });
 
+  // Investment form state
+  const [isInvestmentDialogOpen, setIsInvestmentDialogOpen] = useState(false);
+  const [isEditInvestmentDialogOpen, setIsEditInvestmentDialogOpen] = useState(false);
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
+
+  interface InvestmentForm {
+    instrumentType: string;
+    description: string;
+    principalAmount: number;
+    interestRate: number;
+    maturityDate: string;
+    currency: string;
+  }
+
+  // Cash Flow Forecast interfaces
+  interface CashFlowForecast {
+    id: string;
+    period: string;
+    startDate: string;
+    endDate: string;
+    projectedInflows: number;
+    projectedOutflows: number;
+    netPosition: number;
+    currency: string;
+    confidence: number;
+    status: 'Draft' | 'Active' | 'Archived';
+    createdBy: string;
+    createdAt: string;
+  }
+
+  interface CashFlowForecastForm {
+    period: string;
+    startDate: string;
+    endDate: string;
+    projectedInflows: number;
+    projectedOutflows: number;
+    currency: string;
+    confidence: number;
+  }
+
+  const investmentForm = useForm<InvestmentForm>({
+    defaultValues: {
+      instrumentType: '',
+      description: '',
+      principalAmount: 0,
+      interestRate: 0,
+      maturityDate: '',
+      currency: 'USD'
+    }
+  });
+
+  // Cash Flow Forecast state
+  const [isForecastDialogOpen, setIsForecastDialogOpen] = useState(false);
+  const [isEditForecastDialogOpen, setIsEditForecastDialogOpen] = useState(false);
+  const [selectedForecast, setSelectedForecast] = useState<CashFlowForecast | null>(null);
+  const [cashFlowForecasts, setCashFlowForecasts] = useState<CashFlowForecast[]>([
+    {
+      id: 'cff-001',
+      period: 'Weekly',
+      startDate: '2025-01-28',
+      endDate: '2025-02-03',
+      projectedInflows: 850000,
+      projectedOutflows: 725000,
+      netPosition: 125000,
+      currency: 'USD',
+      confidence: 85,
+      status: 'Active',
+      createdBy: 'System',
+      createdAt: '2025-01-28T00:00:00Z'
+    },
+    {
+      id: 'cff-002',
+      period: 'Monthly',
+      startDate: '2025-01-01',
+      endDate: '2025-01-31',
+      projectedInflows: 3200000,
+      projectedOutflows: 2720000,
+      netPosition: 480000,
+      currency: 'USD',
+      confidence: 75,
+      status: 'Active',
+      createdBy: 'System',
+      createdAt: '2025-01-01T00:00:00Z'
+    },
+    {
+      id: 'cff-003',
+      period: 'Quarterly',
+      startDate: '2025-01-01',
+      endDate: '2025-03-31',
+      projectedInflows: 9800000,
+      projectedOutflows: 8550000,
+      netPosition: 1250000,
+      currency: 'USD',
+      confidence: 70,
+      status: 'Draft',
+      createdBy: 'System',
+      createdAt: '2025-01-15T00:00:00Z'
+    }
+  ]);
+
+  const forecastForm = useForm<CashFlowForecastForm>({
+    defaultValues: {
+      period: 'weekly',
+      startDate: '',
+      endDate: '',
+      projectedInflows: 0,
+      projectedOutflows: 0,
+      currency: 'USD',
+      confidence: 75
+    }
+  });
+
   useEffect(() => {
     if (isEnabled) {
       speak('Welcome to Treasury Management. Manage cash positions, bank accounts, investments, and liquidity optimization with real-time treasury operations.');
@@ -225,6 +337,176 @@ const Treasury: React.FC = () => {
     setInvestments(sampleInvestments);
     setTransfers(sampleTransfers);
     setIsLoading(false);
+  };
+
+  // Investment CRUD operations
+  const handleCreateInvestment = (data: InvestmentForm) => {
+    const newInvestment: Investment = {
+      id: `inv-${String(investments.length + 1).padStart(3, '0')}`,
+      instrumentType: data.instrumentType,
+      description: data.description,
+      principalAmount: data.principalAmount,
+      currentValue: data.principalAmount, // Initially same as principal
+      maturityDate: data.maturityDate,
+      interestRate: data.interestRate,
+      status: 'Active'
+    };
+    setInvestments([...investments, newInvestment]);
+    setIsInvestmentDialogOpen(false);
+    investmentForm.reset();
+    toast({
+      title: 'Investment Created',
+      description: `${data.instrumentType} has been added to the portfolio successfully.`,
+    });
+  };
+
+  const handleEditInvestment = (investment: Investment) => {
+    setSelectedInvestment(investment);
+    investmentForm.reset({
+      instrumentType: investment.instrumentType,
+      description: investment.description,
+      principalAmount: investment.principalAmount,
+      interestRate: investment.interestRate,
+      maturityDate: investment.maturityDate,
+      currency: 'USD'
+    });
+    setIsEditInvestmentDialogOpen(true);
+  };
+
+  const handleUpdateInvestment = (data: InvestmentForm) => {
+    setInvestments(investments.map(inv => 
+      inv.id === selectedInvestment?.id 
+        ? { 
+            ...inv, 
+            instrumentType: data.instrumentType,
+            description: data.description,
+            principalAmount: data.principalAmount,
+            maturityDate: data.maturityDate,
+            interestRate: data.interestRate
+          } 
+        : inv
+    ));
+    setIsEditInvestmentDialogOpen(false);
+    setSelectedInvestment(null);
+    toast({
+      title: 'Investment Updated',
+      description: `${data.instrumentType} has been updated successfully.`,
+    });
+  };
+
+  const handleDeleteInvestment = (id: string) => {
+    const investment = investments.find(inv => inv.id === id);
+    setInvestments(investments.filter(inv => inv.id !== id));
+    if (investment) {
+      toast({
+        title: 'Investment Deleted',
+        description: `${investment.instrumentType} has been removed from the portfolio.`,
+      });
+    }
+  };
+
+  const handleMatureInvestment = (id: string) => {
+    setInvestments(investments.map(inv => 
+      inv.id === id 
+        ? { ...inv, status: 'Matured' as const } 
+        : inv
+    ));
+    const investment = investments.find(inv => inv.id === id);
+    if (investment) {
+      toast({
+        title: 'Investment Matured',
+        description: `${investment.instrumentType} has been marked as matured.`,
+      });
+    }
+  };
+
+  // Cash Flow Forecast CRUD operations
+  const handleCreateForecast = (data: CashFlowForecastForm) => {
+    const newForecast: CashFlowForecast = {
+      id: `cff-${String(cashFlowForecasts.length + 1).padStart(3, '0')}`,
+      period: data.period,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      projectedInflows: data.projectedInflows,
+      projectedOutflows: data.projectedOutflows,
+      netPosition: data.projectedInflows - data.projectedOutflows,
+      currency: data.currency,
+      confidence: data.confidence,
+      status: 'Draft',
+      createdBy: 'Current User',
+      createdAt: new Date().toISOString()
+    };
+    setCashFlowForecasts([...cashFlowForecasts, newForecast]);
+    setIsForecastDialogOpen(false);
+    forecastForm.reset();
+    toast({
+      title: 'Forecast Created',
+      description: `${data.period} cash flow forecast has been created successfully.`,
+    });
+  };
+
+  const handleEditForecast = (forecast: CashFlowForecast) => {
+    setSelectedForecast(forecast);
+    forecastForm.reset({
+      period: forecast.period,
+      startDate: forecast.startDate,
+      endDate: forecast.endDate,
+      projectedInflows: forecast.projectedInflows,
+      projectedOutflows: forecast.projectedOutflows,
+      currency: forecast.currency,
+      confidence: forecast.confidence
+    });
+    setIsEditForecastDialogOpen(true);
+  };
+
+  const handleUpdateForecast = (data: CashFlowForecastForm) => {
+    setCashFlowForecasts(cashFlowForecasts.map(f => 
+      f.id === selectedForecast?.id 
+        ? { 
+            ...f, 
+            period: data.period,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            projectedInflows: data.projectedInflows,
+            projectedOutflows: data.projectedOutflows,
+            netPosition: data.projectedInflows - data.projectedOutflows,
+            currency: data.currency,
+            confidence: data.confidence
+          } 
+        : f
+    ));
+    setIsEditForecastDialogOpen(false);
+    setSelectedForecast(null);
+    toast({
+      title: 'Forecast Updated',
+      description: `${data.period} cash flow forecast has been updated successfully.`,
+    });
+  };
+
+  const handleDeleteForecast = (id: string) => {
+    const forecast = cashFlowForecasts.find(f => f.id === id);
+    setCashFlowForecasts(cashFlowForecasts.filter(f => f.id !== id));
+    if (forecast) {
+      toast({
+        title: 'Forecast Deleted',
+        description: `${forecast.period} cash flow forecast has been deleted.`,
+      });
+    }
+  };
+
+  const handleActivateForecast = (id: string) => {
+    setCashFlowForecasts(cashFlowForecasts.map(f => 
+      f.id === id 
+        ? { ...f, status: 'Active' as const } 
+        : { ...f, status: f.status === 'Active' ? 'Draft' as const : f.status }
+    ));
+    const forecast = cashFlowForecasts.find(f => f.id === id);
+    if (forecast) {
+      toast({
+        title: 'Forecast Activated',
+        description: `${forecast.period} cash flow forecast has been activated.`,
+      });
+    }
   };
 
   const refreshData = () => {
@@ -358,6 +640,148 @@ const Treasury: React.FC = () => {
           {value}
         </Badge>
       )
+    }
+  ];
+
+  const investmentActions: TableAction[] = [
+    {
+      label: 'View',
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (row: Investment) => {
+        toast({
+          title: 'View Investment',
+          description: `Opening details for ${row.instrumentType}`,
+        });
+      },
+      variant: 'ghost'
+    },
+    {
+      label: 'Edit',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (row: Investment) => handleEditInvestment(row),
+      variant: 'ghost'
+    },
+    {
+      label: 'Mature',
+      icon: <Calendar className="h-4 w-4" />,
+      onClick: (row: Investment) => {
+        if (row.status === 'Active') {
+          handleMatureInvestment(row.id);
+        } else {
+          toast({
+            title: 'Already Matured',
+            description: 'This investment is already matured.',
+            variant: 'destructive'
+          });
+        }
+      },
+      variant: 'ghost',
+      disabled: (row: Investment) => row.status !== 'Active'
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: (row: Investment) => {
+        if (confirm(`Are you sure you want to delete ${row.instrumentType}?`)) {
+          handleDeleteInvestment(row.id);
+        }
+      },
+      variant: 'ghost'
+    }
+  ];
+
+  // Cash Flow Forecast columns and actions
+  const cashFlowForecastColumns: EnhancedColumn[] = [
+    { key: 'period', header: 'Period', filterable: true, filterOptions: [
+      { label: 'Weekly', value: 'Weekly' },
+      { label: 'Monthly', value: 'Monthly' },
+      { label: 'Quarterly', value: 'Quarterly' }
+    ]},
+    { key: 'startDate', header: 'Start Date', sortable: true },
+    { key: 'endDate', header: 'End Date', sortable: true },
+    { 
+      key: 'projectedInflows', 
+      header: 'Projected Inflows',
+      render: (value: number, row: CashFlowForecast) => `${row.currency} ${value.toLocaleString()}`
+    },
+    { 
+      key: 'projectedOutflows', 
+      header: 'Projected Outflows',
+      render: (value: number, row: CashFlowForecast) => `${row.currency} ${value.toLocaleString()}`
+    },
+    { 
+      key: 'netPosition', 
+      header: 'Net Position',
+      render: (value: number, row: CashFlowForecast) => (
+        <span className={`font-semibold ${value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {row.currency} {value.toLocaleString()}
+        </span>
+      )
+    },
+    { 
+      key: 'confidence', 
+      header: 'Confidence',
+      render: (value: number) => `${value}%`
+    },
+    { 
+      key: 'status', 
+      header: 'Status',
+      render: (value: string) => (
+        <Badge className={
+          value === 'Active' ? 'bg-green-100 text-green-800' :
+          value === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
+        }>
+          {value}
+        </Badge>
+      )
+    }
+  ];
+
+  const cashFlowForecastActions: TableAction[] = [
+    {
+      label: 'View',
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (row: CashFlowForecast) => {
+        toast({
+          title: 'View Forecast',
+          description: `Opening details for ${row.period} forecast`,
+        });
+      },
+      variant: 'ghost'
+    },
+    {
+      label: 'Edit',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (row: CashFlowForecast) => handleEditForecast(row),
+      variant: 'ghost'
+    },
+    {
+      label: 'Activate',
+      icon: <TrendingUp className="h-4 w-4" />,
+      onClick: (row: CashFlowForecast) => {
+        if (row.status !== 'Active') {
+          handleActivateForecast(row.id);
+        } else {
+          toast({
+            title: 'Already Active',
+            description: 'This forecast is already active.',
+            variant: 'destructive'
+          });
+        }
+      },
+      variant: 'ghost',
+      disabled: (row: CashFlowForecast) => row.status === 'Active'
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: (row: CashFlowForecast) => {
+        if (confirm(`Are you sure you want to delete ${row.period} forecast?`)) {
+          handleDeleteForecast(row.id);
+        }
+      },
+      variant: 'ghost'
     }
   ];
 
@@ -733,17 +1157,120 @@ const Treasury: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                Investment Portfolio
-                <Button onClick={() => toast({ title: 'New Investment', description: 'Opening investment entry form' })}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Investment
-                </Button>
+                Investment Portfolio Management
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={refreshData} disabled={isLoading}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  <Dialog open={isInvestmentDialogOpen} onOpenChange={setIsInvestmentDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Investment
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add New Investment</DialogTitle>
+                      </DialogHeader>
+                      <Form {...investmentForm}>
+                        <form onSubmit={investmentForm.handleSubmit(handleCreateInvestment)} className="space-y-4">
+                          <FormField
+                            control={investmentForm.control}
+                            name="instrumentType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Instrument Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select instrument type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Certificate of Deposit">Certificate of Deposit</SelectItem>
+                                    <SelectItem value="Money Market Fund">Money Market Fund</SelectItem>
+                                    <SelectItem value="Treasury Bill">Treasury Bill</SelectItem>
+                                    <SelectItem value="Corporate Bond">Corporate Bond</SelectItem>
+                                    <SelectItem value="Government Bond">Government Bond</SelectItem>
+                                    <SelectItem value="Commercial Paper">Commercial Paper</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={investmentForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., 6-Month CD - 4.5% APY" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={investmentForm.control}
+                            name="principalAmount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Principal Amount ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={investmentForm.control}
+                            name="interestRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Interest Rate (%)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={investmentForm.control}
+                            name="maturityDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Maturity Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsInvestmentDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Add Investment</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <EnhancedDataTable 
                 columns={investmentColumns}
                 data={investments}
+                actions={investmentActions}
                 searchPlaceholder="Search investments..."
                 exportable={true}
                 refreshable={true}
@@ -751,46 +1278,268 @@ const Treasury: React.FC = () => {
               />
             </CardContent>
           </Card>
+          
+          {/* Edit Investment Dialog */}
+          <Dialog open={isEditInvestmentDialogOpen} onOpenChange={setIsEditInvestmentDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Investment</DialogTitle>
+              </DialogHeader>
+              <Form {...investmentForm}>
+                <form onSubmit={investmentForm.handleSubmit(handleUpdateInvestment)} className="space-y-4">
+                  <FormField
+                    control={investmentForm.control}
+                    name="instrumentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instrument Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select instrument type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Certificate of Deposit">Certificate of Deposit</SelectItem>
+                            <SelectItem value="Money Market Fund">Money Market Fund</SelectItem>
+                            <SelectItem value="Treasury Bill">Treasury Bill</SelectItem>
+                            <SelectItem value="Corporate Bond">Corporate Bond</SelectItem>
+                            <SelectItem value="Government Bond">Government Bond</SelectItem>
+                            <SelectItem value="Commercial Paper">Commercial Paper</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={investmentForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={investmentForm.control}
+                    name="principalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Principal Amount ($)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={investmentForm.control}
+                    name="interestRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interest Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={investmentForm.control}
+                    name="maturityDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maturity Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsEditInvestmentDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">Update Investment</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="forecasting" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Cash Flow Forecasting</CardTitle>
+              <CardTitle className="flex justify-between items-center">
+                Cash Flow Forecasting
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={refreshData} disabled={isLoading}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  <Dialog open={isForecastDialogOpen} onOpenChange={setIsForecastDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Forecast
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Create Cash Flow Forecast</DialogTitle>
+                      </DialogHeader>
+                      <Form {...forecastForm}>
+                        <form onSubmit={forecastForm.handleSubmit(handleCreateForecast)} className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={forecastForm.control}
+                              name="period"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Forecast Period</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select period" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="weekly">Weekly</SelectItem>
+                                      <SelectItem value="monthly">Monthly</SelectItem>
+                                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={forecastForm.control}
+                              name="currency"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Currency</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select currency" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="USD">USD</SelectItem>
+                                      <SelectItem value="EUR">EUR</SelectItem>
+                                      <SelectItem value="GBP">GBP</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={forecastForm.control}
+                              name="startDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Start Date</FormLabel>
+                                  <FormControl>
+                                    <Input type="date" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={forecastForm.control}
+                              name="endDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>End Date</FormLabel>
+                                  <FormControl>
+                                    <Input type="date" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={forecastForm.control}
+                              name="projectedInflows"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Projected Inflows ($)</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={forecastForm.control}
+                              name="projectedOutflows"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Projected Outflows ($)</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={forecastForm.control}
+                            name="confidence"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confidence Level (%)</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select confidence" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="50">50% - Low Confidence</SelectItem>
+                                    <SelectItem value="65">65% - Medium-Low Confidence</SelectItem>
+                                    <SelectItem value="75">75% - Medium Confidence</SelectItem>
+                                    <SelectItem value="85">85% - Medium-High Confidence</SelectItem>
+                                    <SelectItem value="95">95% - High Confidence</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsForecastDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Create Forecast</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="forecastPeriod">Forecast Period</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button className="w-full">Generate Forecast</Button>
-                </div>
-              </div>
-
+              {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="p-4">
                   <div className="text-lg font-semibold">Next 7 Days</div>
@@ -808,8 +1557,164 @@ const Treasury: React.FC = () => {
                   <div className="text-sm text-muted-foreground">Projected net inflow</div>
                 </Card>
               </div>
+
+              {/* Forecasts Table */}
+              <EnhancedDataTable 
+                columns={cashFlowForecastColumns}
+                data={cashFlowForecasts}
+                actions={cashFlowForecastActions}
+                searchPlaceholder="Search forecasts..."
+                exportable={true}
+                refreshable={true}
+                onRefresh={refreshData}
+              />
             </CardContent>
           </Card>
+          
+          {/* Edit Forecast Dialog */}
+          <Dialog open={isEditForecastDialogOpen} onOpenChange={setIsEditForecastDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Edit Cash Flow Forecast</DialogTitle>
+              </DialogHeader>
+              <Form {...forecastForm}>
+                <form onSubmit={forecastForm.handleSubmit(handleUpdateForecast)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={forecastForm.control}
+                      name="period"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Forecast Period</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select period" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={forecastForm.control}
+                      name="currency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Currency</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select currency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="EUR">EUR</SelectItem>
+                              <SelectItem value="GBP">GBP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={forecastForm.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={forecastForm.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={forecastForm.control}
+                      name="projectedInflows"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Projected Inflows ($)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={forecastForm.control}
+                      name="projectedOutflows"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Projected Outflows ($)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={forecastForm.control}
+                    name="confidence"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confidence Level (%)</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select confidence" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="50">50% - Low Confidence</SelectItem>
+                            <SelectItem value="65">65% - Medium-Low Confidence</SelectItem>
+                            <SelectItem value="75">75% - Medium Confidence</SelectItem>
+                            <SelectItem value="85">85% - Medium-High Confidence</SelectItem>
+                            <SelectItem value="95">95% - High Confidence</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsEditForecastDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">Update Forecast</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
     </div>
