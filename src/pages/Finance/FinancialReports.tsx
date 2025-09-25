@@ -11,6 +11,7 @@ import DataTable, { Column } from '../../components/data/DataTable';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { Label } from '../../components/ui/label';
 import { useForm } from 'react-hook-form';
 
 interface DataTableRow {
@@ -30,6 +31,9 @@ const FinancialReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [viewingReport, setViewingReport] = useState(null);
+  const [viewingTemplate, setViewingTemplate] = useState(null);
+  const [viewingDashboard, setViewingDashboard] = useState(null);
 
   const form = useForm({
     defaultValues: {
@@ -114,9 +118,9 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm" onClick={() => {
-            alert(`Viewing report: ${row.name}`);
-          }}><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => setViewingReport(row)}>
+            <Eye className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => handleEdit(row)}><Edit className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)}><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -135,11 +139,14 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
+          <Button variant="ghost" size="sm" onClick={() => setViewingTemplate(row)}>
+            <Eye className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => {
-            alert(`Viewing template: ${row.name}`);
-          }}><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => {
-            alert(`Editing template: ${row.name}`);
+            if (confirm(`Edit template ${row.name}?`)) {
+              // Template edit functionality would go here
+              alert(`Editing template: ${row.name}`);
+            }
           }}><Edit className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => {
             if (confirm(`Delete template ${row.name}?`)) {
@@ -169,11 +176,14 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
+          <Button variant="ghost" size="sm" onClick={() => setViewingDashboard(row)}>
+            <Eye className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => {
-            alert(`Viewing dashboard: ${row.name}`);
-          }}><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => {
-            alert(`Editing dashboard: ${row.name}`);
+            if (confirm(`Edit dashboard ${row.name}?`)) {
+              // Dashboard edit functionality would go here
+              alert(`Editing dashboard: ${row.name}`);
+            }
           }}><Edit className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => {
             if (confirm(`Delete dashboard ${row.name}?`)) {
@@ -265,7 +275,12 @@ const FinancialReports: React.FC = () => {
                 <CardTitle>Financial Reports</CardTitle>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => {
-                    alert('Filter functionality would open a filter dialog here');
+                    // Filter functionality would open a filter dialog here
+                    // For now, we'll implement a simple status filter
+                    const status = prompt('Enter status to filter (Active, Draft, etc.) or leave blank for all:');
+                    if (status !== null) {
+                      alert(`Filtering reports by status: ${status || 'All'}`);
+                    }
                   }}>
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
@@ -563,6 +578,170 @@ const FinancialReports: React.FC = () => {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* View Report Dialog */}
+      <Dialog open={!!viewingReport} onOpenChange={() => setViewingReport(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Report Details - {viewingReport?.name}</DialogTitle>
+          </DialogHeader>
+          {viewingReport && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Report ID</Label>
+                  <p className="text-lg font-semibold">{viewingReport.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Status</Label>
+                  <Badge variant={viewingReport.status === 'Active' ? 'default' : 'secondary'}>
+                    {viewingReport.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Type</Label>
+                  <p className="text-lg">{viewingReport.type}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Format</Label>
+                  <p className="text-lg">{viewingReport.format}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Frequency</Label>
+                  <p className="text-lg">{viewingReport.period}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Last Run</Label>
+                  <p className="text-lg">{viewingReport.lastRun}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Created By</Label>
+                  <p className="text-lg">{viewingReport.createdBy}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Last modified: {new Date().toLocaleDateString()}
+                </div>
+                <div className="space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setViewingReport(null);
+                      handleEdit(viewingReport);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button onClick={() => {
+                    // Simulate report generation
+                    alert(`Generating ${viewingReport.name} in ${viewingReport.format} format...`);
+                    setViewingReport(null);
+                  }}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                  <Button variant="outline" onClick={() => setViewingReport(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Template Dialog */}
+      <Dialog open={!!viewingTemplate} onOpenChange={() => setViewingTemplate(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Template Details - {viewingTemplate?.name}</DialogTitle>
+          </DialogHeader>
+          {viewingTemplate && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Template ID</Label>
+                  <p className="text-lg font-semibold">{viewingTemplate.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Category</Label>
+                  <p className="text-lg">{viewingTemplate.category}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Usage Count</Label>
+                  <p className="text-lg">{viewingTemplate.usage}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Last Modified</Label>
+                  <p className="text-lg">{viewingTemplate.lastModified}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Template management features
+                </div>
+                <div className="space-x-2">
+                  <Button variant="outline" onClick={() => setViewingTemplate(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dashboard Dialog */}
+      <Dialog open={!!viewingDashboard} onOpenChange={() => setViewingDashboard(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Dashboard Details - {viewingDashboard?.name}</DialogTitle>
+          </DialogHeader>
+          {viewingDashboard && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Dashboard ID</Label>
+                  <p className="text-lg font-semibold">{viewingDashboard.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Status</Label>
+                  <Badge variant={viewingDashboard.status === 'Active' ? 'default' : 'secondary'}>
+                    {viewingDashboard.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Widgets</Label>
+                  <p className="text-lg">{viewingDashboard.widgets}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Active Users</Label>
+                  <p className="text-lg">{viewingDashboard.users}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Last Accessed</Label>
+                  <p className="text-lg">{viewingDashboard.lastAccessed}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Dashboard analytics and management
+                </div>
+                <div className="space-x-2">
+                  <Button variant="outline" onClick={() => setViewingDashboard(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

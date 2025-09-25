@@ -56,6 +56,7 @@ const AccountsPayable: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof invoiceSchema>>({
@@ -267,10 +268,7 @@ const AccountsPayable: React.FC = () => {
       label: 'View',
       icon: <Eye className="h-4 w-4" />,
       onClick: (row: Invoice) => {
-        toast({
-          title: 'View Invoice',
-          description: `Opening invoice ${row.invoiceNumber}`,
-        });
+        setViewingInvoice(row);
       },
       variant: 'ghost'
     },
@@ -598,22 +596,55 @@ const AccountsPayable: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Current (0-30 days)</span>
-                    <span className="font-medium">$12,500</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>31-60 days</span>
-                    <span className="font-medium">$3,200</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>61-90 days</span>
-                    <span className="font-medium">$150</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Over 90 days</span>
-                    <span className="font-medium text-red-600">$0</span>
-                  </div>
+                  {(() => {
+                    const today = new Date();
+                    const agingData = {
+                      current: 0,
+                      days31to60: 0,
+                      days61to90: 0,
+                      over90: 0
+                    };
+
+                    invoices.forEach(invoice => {
+                      if (invoice.status === 'Paid') return; // Skip paid invoices
+                      
+                      const dueDate = new Date(invoice.dueDate);
+                      const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                      
+                      if (daysOverdue <= 0) {
+                        agingData.current += invoice.amount;
+                      } else if (daysOverdue <= 30) {
+                        agingData.current += invoice.amount;
+                      } else if (daysOverdue <= 60) {
+                        agingData.days31to60 += invoice.amount;
+                      } else if (daysOverdue <= 90) {
+                        agingData.days61to90 += invoice.amount;
+                      } else {
+                        agingData.over90 += invoice.amount;
+                      }
+                    });
+
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Current (0-30 days)</span>
+                          <span className="font-medium">${agingData.current.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>31-60 days</span>
+                          <span className="font-medium">${agingData.days31to60.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>61-90 days</span>
+                          <span className="font-medium">${agingData.days61to90.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Over 90 days</span>
+                          <span className="font-medium text-red-600">${agingData.over90.toLocaleString()}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
@@ -644,6 +675,102 @@ const AccountsPayable: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* View Invoice Dialog */}
+      <Dialog open={!!viewingInvoice} onOpenChange={() => setViewingInvoice(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Invoice Details - {viewingInvoice?.invoiceNumber}</DialogTitle>
+          </DialogHeader>
+          {viewingInvoice && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Invoice Number</Label>
+                  <p className="text-lg font-semibold">{viewingInvoice.invoiceNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Status</Label>
+                  <Badge className={getStatusColor(viewingInvoice.status)}>
+                    {viewingInvoice.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Vendor</Label>
+                  <p className="text-lg">{viewingInvoice.vendor}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Purchase Order</Label>
+                  <p className="text-lg">{viewingInvoice.purchaseOrder}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Invoice Date</Label>
+                  <p className="text-lg">{new Date(viewingInvoice.invoiceDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Due Date</Label>
+                  <p className="text-lg">{new Date(viewingInvoice.dueDate).toLocaleDateString()}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Description</Label>
+                  <p className="text-lg">{viewingInvoice.description}</p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Amount</Label>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {viewingInvoice.currency} {viewingInvoice.amount.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Created: {new Date().toLocaleDateString()}
+                </div>
+                <div className="space-x-2">
+                  {viewingInvoice.status !== 'Paid' && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setViewingInvoice(null);
+                        setEditingInvoice(viewingInvoice);
+                        form.reset({
+                          invoiceNumber: viewingInvoice.invoiceNumber,
+                          vendor: viewingInvoice.vendor,
+                          amount: viewingInvoice.amount,
+                          currency: viewingInvoice.currency,
+                          dueDate: viewingInvoice.dueDate,
+                          invoiceDate: viewingInvoice.invoiceDate,
+                          purchaseOrder: viewingInvoice.purchaseOrder,
+                          description: viewingInvoice.description,
+                        });
+                        setIsCreateDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                  {viewingInvoice.status === 'Approved' && (
+                    <Button 
+                      onClick={() => {
+                        processPayment(viewingInvoice);
+                        setViewingInvoice(null);
+                      }}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Process Payment
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setViewingInvoice(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

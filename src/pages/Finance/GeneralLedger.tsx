@@ -87,6 +87,8 @@ const GeneralLedger: React.FC = () => {
   const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [selectedDocumentNumber, setSelectedDocumentNumber] = useState<string>('');
+  const [viewingEntry, setViewingEntry] = useState<JournalEntry | null>(null);
+  const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
   const { toast } = useToast();
 
   const entryForm = useForm<z.infer<typeof journalEntrySchema>>({
@@ -465,10 +467,7 @@ const GeneralLedger: React.FC = () => {
       label: 'View',
       icon: <Eye className="h-4 w-4" />,
       onClick: (row: JournalEntry) => {
-        toast({
-          title: 'View Entry',
-          description: `Opening ${row.documentNumber}`,
-        });
+        setViewingEntry(row);
       },
       variant: 'ghost'
     },
@@ -1128,6 +1127,107 @@ const GeneralLedger: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* View Journal Entry Dialog */}
+      <Dialog open={!!viewingEntry} onOpenChange={() => setViewingEntry(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Journal Entry Details - {viewingEntry?.documentNumber}</DialogTitle>
+          </DialogHeader>
+          {viewingEntry && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Document Number</Label>
+                  <p className="text-lg font-semibold">{viewingEntry.documentNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Status</Label>
+                  <Badge className={getStatusColor(viewingEntry.status)}>
+                    {viewingEntry.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Posting Date</Label>
+                  <p className="text-lg">{new Date(viewingEntry.postingDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Document Type</Label>
+                  <p className="text-lg">{viewingEntry.documentType}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Account</Label>
+                  <p className="text-lg">{viewingEntry.account} - {viewingEntry.accountName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Company Code</Label>
+                  <p className="text-lg">{viewingEntry.companyCode}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Debit Amount</Label>
+                  <p className="text-lg font-semibold text-green-600">
+                    {viewingEntry.debit > 0 ? `$${viewingEntry.debit.toLocaleString()}` : '-'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Credit Amount</Label>
+                  <p className="text-lg font-semibold text-red-600">
+                    {viewingEntry.credit > 0 ? `$${viewingEntry.credit.toLocaleString()}` : '-'}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Description</Label>
+                  <p className="text-lg">{viewingEntry.description}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Reference</Label>
+                  <p className="text-lg">{viewingEntry.reference || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Cost Center</Label>
+                  <p className="text-lg">{viewingEntry.costCenter || 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Journal Entry Management
+                </div>
+                <div className="space-x-2">
+                  {viewingEntry.status === 'Draft' && (
+                    <Button 
+                      onClick={() => {
+                        postEntry(viewingEntry);
+                        setViewingEntry(null);
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Post Entry
+                    </Button>
+                  )}
+                  {viewingEntry.status === 'Posted' && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to reverse this entry?')) {
+                          reverseEntry(viewingEntry);
+                          setViewingEntry(null);
+                        }
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2 transform rotate-180" />
+                      Reverse Entry
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setViewingEntry(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
