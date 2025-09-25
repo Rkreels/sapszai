@@ -11,6 +11,12 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useForm } from 'react-hook-form';
+import { useToast } from '../../hooks/use-toast';
 
 const resourceData = [
   { id: 'RES-001', name: 'John Smith', role: 'Project Manager', availability: 75, utilization: 85, skills: 'Leadership, Planning', cost: '€150/hour' },
@@ -30,12 +36,67 @@ const ResourceManagement: React.FC = () => {
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
   const [activeTab, setActiveTab] = useState('resources');
+  const [isAddResourceOpen, setIsAddResourceOpen] = useState(false);
+  const [isEditAllocationOpen, setIsEditAllocationOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const { toast } = useToast();
+
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      role: '',
+      availability: '',
+      utilization: '',
+      skills: '',
+      cost: ''
+    }
+  });
+
+  const allocationForm = useForm({
+    defaultValues: {
+      project: '',
+      resource: '',
+      allocation: '',
+      startDate: '',
+      endDate: ''
+    }
+  });
 
   useEffect(() => {
     if (isEnabled) {
       speak('Welcome to Resource Management. Here you can manage team members, track availability, plan capacity, and optimize resource allocation across projects.');
     }
   }, [isEnabled, speak]);
+
+  const handleAddResource = (data: any) => {
+    const newResource = {
+      id: `RES-${String(resourceData.length + 1).padStart(3, '0')}`,
+      name: data.name,
+      role: data.role,
+      availability: parseInt(data.availability),
+      utilization: parseInt(data.utilization),
+      skills: data.skills,
+      cost: data.cost
+    };
+    
+    resourceData.push(newResource);
+    setIsAddResourceOpen(false);
+    form.reset();
+    
+    toast({
+      title: 'Resource Added',
+      description: `${data.name} has been added successfully.`,
+    });
+  };
+
+  const handleAssignResource = (resource: any) => {
+    setSelectedResource(resource);
+    alert(`Opening assignment form for ${resource.name}...`);
+  };
+
+  const handleEditAllocation = (allocation: any) => {
+    alert(`Opening edit form for allocation...`);
+  };
 
   const resourceColumns = [
     { key: 'name', header: 'Name' },
@@ -64,7 +125,7 @@ const ResourceManagement: React.FC = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      render: () => <Button variant="outline" size="sm">Assign</Button>
+      render: (_, row: any) => <Button variant="outline" size="sm" onClick={() => handleAssignResource(row)}>Assign</Button>
     }
   ];
 
@@ -77,7 +138,7 @@ const ResourceManagement: React.FC = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      render: () => <Button variant="outline" size="sm">Edit</Button>
+      render: (_, row: any) => <Button variant="outline" size="sm" onClick={() => handleEditAllocation(row)}>Edit</Button>
     }
   ];
 
@@ -150,7 +211,106 @@ const ResourceManagement: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Team Resources</h3>
-              <Button>Add Resource</Button>
+              <Dialog open={isAddResourceOpen} onOpenChange={setIsAddResourceOpen}>
+                <DialogTrigger asChild>
+                  <Button>Add Resource</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Resource</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleAddResource)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Role</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="availability"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Availability (%)</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="utilization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Utilization (%)</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="skills"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Skills</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="cost"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cost</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsAddResourceOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Add Resource</Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
             <DataTable 
               columns={resourceColumns}
@@ -164,7 +324,7 @@ const ResourceManagement: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Resource Allocations</h3>
-              <Button>New Allocation</Button>
+              <Button onClick={() => alert('Opening new allocation form...')}>New Allocation</Button>
             </div>
             <DataTable 
               columns={allocationColumns}

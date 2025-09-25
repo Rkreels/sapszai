@@ -346,11 +346,36 @@ const SalesReturns: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Sales Returns</h1>
         <div className="flex space-x-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.xlsx';
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0];
+              if (file) {
+                toast({ title: 'Import Started', description: `Importing returns from ${file.name}` });
+              }
+            };
+            input.click();
+          }}>
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            const csvData = [
+              ['Return ID', 'Customer', 'Original Order', 'Return Type', 'Status', 'Total Amount', 'Return Date'],
+              ...returns.map(r => [r.id, r.customer, r.originalOrder, r.returnType, r.status, r.totalAmount, r.returnDate])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'returns.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast({ title: 'Export Complete', description: 'Return data exported successfully' });
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

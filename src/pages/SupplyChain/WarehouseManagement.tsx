@@ -10,11 +10,13 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../components/ui/use-toast';
 
 const WarehouseManagement: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -55,7 +57,16 @@ const WarehouseManagement: React.FC = () => {
     { 
       key: 'actions', 
       header: 'Actions',
-      render: () => <Button variant="outline" size="sm"><Edit className="h-3 w-3" /></Button>
+      render: () => (
+        <Button variant="outline" size="sm" onClick={() => {
+          toast({
+            title: "Edit Warehouse",
+            description: "Edit warehouse details form would open here.",
+          });
+        }}>
+          <Edit className="h-3 w-3" />
+        </Button>
+      )
     }
   ];
 
@@ -210,7 +221,12 @@ const WarehouseManagement: React.FC = () => {
         <TabsContent value="warehouses" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Warehouse Facilities</h2>
-            <Button size="sm">
+            <Button size="sm" onClick={() => {
+              toast({
+                title: "Add Warehouse",
+                description: "Add new warehouse form would open here.",
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Warehouse
             </Button>
@@ -224,7 +240,12 @@ const WarehouseManagement: React.FC = () => {
         <TabsContent value="locations" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Storage Locations</h2>
-            <Button size="sm">
+            <Button size="sm" onClick={() => {
+              toast({
+                title: "Add Location",
+                description: "Add new storage location form would open here.",
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Location
             </Button>
@@ -238,7 +259,12 @@ const WarehouseManagement: React.FC = () => {
         <TabsContent value="staff" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Warehouse Staff</h2>
-            <Button size="sm">
+            <Button size="sm" onClick={() => {
+              toast({
+                title: "Add Staff Member",
+                description: "Add new warehouse staff member form would open here.",
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Staff Member
             </Button>

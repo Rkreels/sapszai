@@ -34,8 +34,7 @@ const HumanResources: React.FC = () => {
       title: "Navigation",
       description: `Opening ${title}...`,
     });
-    // For now, we'll show a toast. In a real app, this would navigate to the specific page
-    // navigate(`/human-resources/${path}`);
+    navigate(`/human-resources/${path}`);
   };
 
   return (

@@ -126,11 +126,9 @@ const MaterialMaster: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Material Records</h2>
         <Button onClick={() => {
-          toast({
-            title: 'Create Material',
-            description: 'Opening material creation form',
-          });
-        }}>
+            // Open material creation form
+            alert('Opening material creation form...');
+          }}>
           <Plus className="h-4 w-4 mr-2" />
           Create Material
         </Button>

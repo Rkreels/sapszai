@@ -114,7 +114,9 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            alert(`Viewing report: ${row.name}`);
+          }}><Eye className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => handleEdit(row)}><Edit className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => handleDelete(row.id)}><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -133,9 +135,17 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Trash2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            alert(`Viewing template: ${row.name}`);
+          }}><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            alert(`Editing template: ${row.name}`);
+          }}><Edit className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            if (confirm(`Delete template ${row.name}?`)) {
+              setReportTemplates(reportTemplates.filter(t => t.id !== row.id));
+            }
+          }}><Trash2 className="h-4 w-4" /></Button>
         </div>
       )
     }
@@ -159,9 +169,17 @@ const FinancialReports: React.FC = () => {
       header: 'Actions',
       render: (_, row) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Trash2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            alert(`Viewing dashboard: ${row.name}`);
+          }}><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            alert(`Editing dashboard: ${row.name}`);
+          }}><Edit className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => {
+            if (confirm(`Delete dashboard ${row.name}?`)) {
+              setDashboards(dashboards.filter(d => d.id !== row.id));
+            }
+          }}><Trash2 className="h-4 w-4" /></Button>
         </div>
       )
     }
@@ -246,7 +264,9 @@ const FinancialReports: React.FC = () => {
               <div className="flex justify-between items-center">
                 <CardTitle>Financial Reports</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    alert('Filter functionality would open a filter dialog here');
+                  }}>
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>

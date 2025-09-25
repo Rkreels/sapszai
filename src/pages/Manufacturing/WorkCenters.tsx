@@ -8,6 +8,12 @@ import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import PageHeader from '../../components/page/PageHeader';
 import DataTable from '../../components/data/DataTable';
 import { ArrowLeft, Plus, Edit, Trash2, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { useForm } from 'react-hook-form';
+import { useToast } from '../../hooks/use-toast';
 
 interface DataTableRow {
   id: string;
@@ -57,11 +63,85 @@ const WorkCenters: React.FC = () => {
     }
   ]);
 
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingWorkCenter, setEditingWorkCenter] = useState(null);
+  const { toast } = useToast();
+
+  const form = useForm({
+    defaultValues: {
+      id: '',
+      name: '',
+      type: 'Production',
+      capacity: '',
+      efficiency: '',
+      status: 'Active',
+      costCenter: '',
+      responsiblePerson: ''
+    }
+  });
+
   React.useEffect(() => {
     if (isEnabled) {
       speak('You are now in Work Centers Management. Here you can manage work centers, their capacity, and configuration.');
     }
   }, [isEnabled, speak]);
+
+  const handleCreateWorkCenter = (data: any) => {
+    const newWorkCenter = {
+      id: data.id || `WC-${String(workCenters.length + 1).padStart(3, '0')}`,
+      name: data.name,
+      type: data.type,
+      capacity: parseInt(data.capacity),
+      efficiency: parseInt(data.efficiency),
+      status: data.status,
+      costCenter: data.costCenter,
+      responsiblePerson: data.responsiblePerson
+    };
+    
+    setWorkCenters([...workCenters, newWorkCenter]);
+    setIsCreateDialogOpen(false);
+    form.reset();
+    
+    toast({
+      title: 'Work Center Created',
+      description: `Work center ${newWorkCenter.name} has been created successfully.`,
+    });
+  };
+
+  const handleEditWorkCenter = (workCenter: any) => {
+    setEditingWorkCenter(workCenter);
+    form.reset(workCenter);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleUpdateWorkCenter = (data: any) => {
+    const updatedWorkCenters = workCenters.map(wc => 
+      wc.id === editingWorkCenter.id ? { ...data, capacity: parseInt(data.capacity), efficiency: parseInt(data.efficiency) } : wc
+    );
+    setWorkCenters(updatedWorkCenters);
+    setIsCreateDialogOpen(false);
+    setEditingWorkCenter(null);
+    form.reset();
+    
+    toast({
+      title: 'Work Center Updated',
+      description: `Work center ${data.name} has been updated successfully.`,
+    });
+  };
+
+  const handleDeleteWorkCenter = (id: string) => {
+    if (confirm('Are you sure you want to delete this work center?')) {
+      setWorkCenters(workCenters.filter(wc => wc.id !== id));
+      toast({
+        title: 'Work Center Deleted',
+        description: 'Work center has been deleted successfully.',
+      });
+    }
+  };
+
+  const handleConfigureWorkCenter = (workCenter: any) => {
+    alert(`Opening configuration for work center ${workCenter.name}...`);
+  };
 
   const columns = [
     { key: 'id', header: 'Work Center ID' },
@@ -99,13 +179,13 @@ const WorkCenters: React.FC = () => {
       header: 'Actions',
       render: (_, row: any) => (
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleEditWorkCenter(row)}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleConfigureWorkCenter(row)}>
             <Settings className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleDeleteWorkCenter(row.id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -133,10 +213,145 @@ const WorkCenters: React.FC = () => {
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Work Centers Management</h2>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Work Center
-        </Button>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Work Center
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingWorkCenter ? 'Edit Work Center' : 'Create Work Center'}</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(editingWorkCenter ? handleUpdateWorkCenter : handleCreateWorkCenter)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Production">Production</SelectItem>
+                            <SelectItem value="Quality">Quality</SelectItem>
+                            <SelectItem value="Packaging">Packaging</SelectItem>
+                            <SelectItem value="Maintenance">Maintenance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Maintenance">Maintenance</SelectItem>
+                            <SelectItem value="Inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="capacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Capacity (hrs/day)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="efficiency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Efficiency (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="costCenter"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cost Center</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="responsiblePerson"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Responsible Person</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">{editingWorkCenter ? 'Update' : 'Create'}</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

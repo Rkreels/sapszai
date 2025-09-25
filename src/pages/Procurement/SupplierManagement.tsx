@@ -87,17 +87,58 @@ const SupplierManagement: React.FC = () => {
   };
 
   const handleSupplierEdit = (supplier: Supplier) => {
+    // In a real implementation, this would open an edit form
     toast({
       title: 'Edit Supplier',
       description: `Opening edit form for ${supplier.name}`,
     });
+    // Placeholder for edit functionality
+    console.log('Edit supplier:', supplier);
   };
 
   const handleSupplierPerformance = (supplier: Supplier) => {
+    // Navigate to performance details or show performance modal
     toast({
       title: 'Supplier Performance',
       description: `Viewing performance metrics for ${supplier.name}`,
     });
+    // Placeholder for performance viewing functionality
+    console.log('View performance for:', supplier);
+  };
+
+  const handleAddSupplier = () => {
+    // In a real implementation, this would open a supplier creation form
+    toast({
+      title: 'Add Supplier',
+      description: 'Opening supplier registration form',
+    });
+    // Placeholder for add supplier functionality
+    console.log('Add new supplier');
+  };
+
+  const handleReviewDocuments = (supplier: Supplier) => {
+    // In a real implementation, this would open document review interface
+    toast({
+      title: 'Review Documents',
+      description: `Opening documents for ${supplier.name}`,
+    });
+    // Placeholder for document review functionality
+    console.log('Review documents for:', supplier);
+  };
+
+  const handleApproveSupplier = (supplier: Supplier) => {
+    // Update supplier status to Active
+    const updatedSuppliers = suppliers.map(s => 
+      s.id === supplier.id ? { ...s, status: 'Active' as const } : s
+    );
+    setSuppliers(updatedSuppliers);
+    
+    toast({
+      title: 'Supplier Approved',
+      description: `${supplier.name} has been approved and activated`,
+    });
+    // Placeholder for approval functionality
+    console.log('Approved supplier:', supplier);
   };
 
   return (
@@ -179,7 +220,7 @@ const SupplierManagement: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 Supplier Directory
-                <Button onClick={() => toast({ title: 'Add Supplier', description: 'Opening supplier registration form' })}>
+                <Button onClick={handleAddSupplier}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Supplier
                 </Button>
@@ -255,10 +296,17 @@ const SupplierManagement: React.FC = () => {
                         <p className="text-sm">Contact: {supplier.contactPerson}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleReviewDocuments(supplier)}
+                        >
                           Review Documents
                         </Button>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => handleApproveSupplier(supplier)}
+                        >
                           <Users className="h-4 w-4 mr-2" />
                           Approve
                         </Button>

@@ -70,10 +70,20 @@ const ManufacturingDashboard: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Manufacturing</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+            toast({
+              title: "Personalize Page",
+              description: "Page customization options would open here.",
+            });
+          }}>
             Personalize Page
           </Button>
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+            toast({
+              title: "Share Page",
+              description: "Share options would be displayed here.",
+            });
+          }}>
             Share Page
           </Button>
         </div>

@@ -49,7 +49,6 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({ module }) => {
       { name: 'Purchase Requisitions', path: '/procurement/requisitions' },
       { name: 'Purchase Orders', path: '/procurement/purchase-orders' },
       { name: 'Supplier Management', path: '/procurement/suppliers' },
-      { name: 'Contracts', path: '/procurement/contracts' },
       { name: 'Source List', path: '/procurement/source-list' },
       { name: 'RFQ Management', path: '/procurement/rfq' },
       { name: 'Invoice Verification', path: '/procurement/invoice-verification' },

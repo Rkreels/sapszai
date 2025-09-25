@@ -8,11 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { BarChart2, Box, Truck, ArrowRight, Package, ClipboardCheck, FileText } from 'lucide-react';
 import PageHeader from '../components/page/PageHeader';
 import SupplyChainMetrics from './SupplyChain/components/SupplyChainMetrics';
+import { useToast } from '../components/ui/use-toast';
 
 const SupplyChain: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
   
   useEffect(() => {
     if (isEnabled) {
@@ -22,6 +24,13 @@ const SupplyChain: React.FC = () => {
 
   const handleNavigation = (path: string) => {
     navigate(`/supply-chain/${path}`);
+  };
+
+  const handleCardClick = (action: string, description: string) => {
+    toast({
+      title: action,
+      description: description,
+    });
   };
 
   return (
@@ -129,7 +138,7 @@ const SupplyChain: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Purchase Orders</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Create Purchase Order', 'Create new purchase orders form would open here')}>
                 <div className="flex items-center">
                   <Box className="h-5 w-5 text-blue-600 mr-3" />
                   <div>
@@ -139,7 +148,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Display Purchase Orders', 'View existing purchase orders list would open here')}>
                 <div className="flex items-center">
                   <FileText className="h-5 w-5 text-blue-600 mr-3" />
                   <div>
@@ -149,7 +158,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Approve Purchase Orders', 'Review and approve pending orders interface would open here')}>
                 <div className="flex items-center">
                   <ClipboardCheck className="h-5 w-5 text-blue-600 mr-3" />
                   <div>
@@ -162,7 +171,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Goods Receipt', 'Process goods receipts interface would open here')}>
                 <div className="flex items-center">
                   <Package className="h-5 w-5 text-blue-600 mr-3" />
                   <div>
@@ -180,7 +189,7 @@ const SupplyChain: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Inventory Management</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Stock Overview', 'View current stock levels interface would open here')}>
                 <div className="flex items-center">
                   <Package className="h-5 w-5 text-green-600 mr-3" />
                   <div>
@@ -190,7 +199,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Physical Inventory', 'Perform stock counts interface would open here')}>
                 <div className="flex items-center">
                   <ClipboardCheck className="h-5 w-5 text-green-600 mr-3" />
                   <div>
@@ -200,7 +209,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Stock Transfers', 'Transfer stock between locations interface would open here')}>
                 <div className="flex items-center">
                   <Truck className="h-5 w-5 text-green-600 mr-3" />
                   <div>
@@ -210,7 +219,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Inventory Analytics', 'Analyze inventory trends interface would open here')}>
                 <div className="flex items-center">
                   <BarChart2 className="h-5 w-5 text-green-600 mr-3" />
                   <div>
@@ -227,7 +236,7 @@ const SupplyChain: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Supplier Management</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Supplier Master', 'Manage supplier data interface would open here')}>
                 <div className="flex items-center">
                   <Box className="h-5 w-5 text-purple-600 mr-3" />
                   <div>
@@ -237,7 +246,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Supplier Evaluation', 'Evaluate supplier performance interface would open here')}>
                 <div className="flex items-center">
                   <FileText className="h-5 w-5 text-purple-600 mr-3" />
                   <div>
@@ -247,7 +256,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Contracts', 'Manage supplier contracts interface would open here')}>
                 <div className="flex items-center">
                   <ClipboardCheck className="h-5 w-5 text-purple-600 mr-3" />
                   <div>
@@ -257,7 +266,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Spend Analysis', 'Analyze supplier spending interface would open here')}>
                 <div className="flex items-center">
                   <BarChart2 className="h-5 w-5 text-purple-600 mr-3" />
                   <div>
@@ -274,7 +283,7 @@ const SupplyChain: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Logistics Management</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Inbound Deliveries', 'Process incoming goods interface would open here')}>
                 <div className="flex items-center">
                   <Truck className="h-5 w-5 text-orange-600 mr-3" />
                   <div>
@@ -284,7 +293,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Outbound Deliveries', 'Process outgoing shipments interface would open here')}>
                 <div className="flex items-center">
                   <Package className="h-5 w-5 text-orange-600 mr-3" />
                   <div>
@@ -294,7 +303,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Shipment Tracking', 'Track shipments in transit interface would open here')}>
                 <div className="flex items-center">
                   <FileText className="h-5 w-5 text-orange-600 mr-3" />
                   <div>
@@ -304,7 +313,7 @@ const SupplyChain: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow">
+              <div className="bg-white p-4 rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleCardClick('Transportation', 'Manage transportation interface would open here')}>
                 <div className="flex items-center">
                   <BarChart2 className="h-5 w-5 text-orange-600 mr-3" />
                   <div>

@@ -3,8 +3,14 @@ import React, { useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../../components/ui/form';
+import { Input } from '../../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import DataTable from '../../../components/data/DataTable';
-import { ClipboardCheck, AlertTriangle, TrendingUp, FileText, Plus } from 'lucide-react';
+import { ClipboardCheck, AlertTriangle, TrendingUp, FileText, Plus, Eye } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { useToast } from '../../../components/ui/use-toast';
 
 interface DataTableRow {
   id: string;
@@ -73,6 +79,80 @@ const QualityControl: React.FC = () => {
       assignedTo: 'Quality Team'
     }
   ];
+
+  const [isCreateInspectionOpen, setIsCreateInspectionOpen] = useState(false);
+  const [isReportIssueOpen, setIsReportIssueOpen] = useState(false);
+  const { toast } = useToast();
+
+  const inspectionForm = useForm({
+    defaultValues: {
+      material: '',
+      quantity: '',
+      inspector: '',
+      criticalChecks: ''
+    }
+  });
+
+  const issueForm = useForm({
+    defaultValues: {
+      material: '',
+      defectType: '',
+      severity: 'Medium',
+      quantity: '',
+      assignedTo: ''
+    }
+  });
+
+  const handleCreateInspection = (data: any) => {
+    const newInspection = {
+      lotNumber: `QL-2025-${String(activeInspections.length + 1).padStart(3, '0')}`,
+      material: data.material,
+      quantity: parseInt(data.quantity),
+      inspector: data.inspector,
+      startDate: new Date().toISOString().split('T')[0],
+      status: 'In Progress',
+      criticalChecks: parseInt(data.criticalChecks),
+      passedChecks: 0
+    };
+    
+    setActiveInspections([...activeInspections, newInspection]);
+    setIsCreateInspectionOpen(false);
+    inspectionForm.reset();
+    
+    toast({
+      title: 'Inspection Created',
+      description: `New inspection lot ${newInspection.lotNumber} has been created.`,
+    });
+  };
+
+  const handleReportIssue = (data: any) => {
+    const newIssue = {
+      issueId: `QI-2025-${String(qualityIssues.length + 1).padStart(3, '0')}`,
+      material: data.material,
+      defectType: data.defectType,
+      severity: data.severity,
+      quantity: parseInt(data.quantity),
+      reportDate: new Date().toISOString().split('T')[0],
+      status: 'Open',
+      assignedTo: data.assignedTo
+    };
+    
+    qualityIssues.push(newIssue);
+    setIsReportIssueOpen(false);
+    issueForm.reset();
+    
+    toast({
+      title: 'Issue Reported',
+      description: `Quality issue ${newIssue.issueId} has been reported.`,
+    });
+  };
+
+  const handleGenerateReports = () => {
+    toast({
+      title: 'Generating Reports',
+      description: 'Quality reports are being generated and will be available for download.',
+    });
+  };
 
   const inspectionColumns = [
     { key: 'lotNumber', header: 'Lot Number' },
@@ -145,14 +225,87 @@ const QualityControl: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Quality Control Management</h2>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleGenerateReports}>
             <FileText className="h-4 w-4 mr-2" />
             Reports
           </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Inspection
-          </Button>
+          <Dialog open={isCreateInspectionOpen} onOpenChange={setIsCreateInspectionOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                New Inspection
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Inspection</DialogTitle>
+              </DialogHeader>
+              <Form {...inspectionForm}>
+                <form onSubmit={inspectionForm.handleSubmit(handleCreateInspection)} className="space-y-4">
+                  <FormField
+                    control={inspectionForm.control}
+                    name="material"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Material</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={inspectionForm.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={inspectionForm.control}
+                      name="criticalChecks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Critical Checks</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={inspectionForm.control}
+                    name="inspector"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Inspector</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsCreateInspectionOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">Create Inspection</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -207,10 +360,83 @@ const QualityControl: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Inspection Lots</h3>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Inspection Lot
-              </Button>
+              <Dialog open={isCreateInspectionOpen} onOpenChange={setIsCreateInspectionOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Inspection Lot
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Inspection Lot</DialogTitle>
+                  </DialogHeader>
+                  <Form {...inspectionForm}>
+                    <form onSubmit={inspectionForm.handleSubmit(handleCreateInspection)} className="space-y-4">
+                      <FormField
+                        control={inspectionForm.control}
+                        name="material"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Material</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={inspectionForm.control}
+                          name="quantity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Quantity</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={inspectionForm.control}
+                          name="criticalChecks"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Critical Checks</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={inspectionForm.control}
+                        name="inspector"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Inspector</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsCreateInspectionOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Create Inspection</Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
             <DataTable columns={inspectionColumns} data={activeInspections} />
           </Card>
@@ -220,10 +446,108 @@ const QualityControl: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Quality Issues</h3>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Report Issue
-              </Button>
+              <Dialog open={isReportIssueOpen} onOpenChange={setIsReportIssueOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Report Issue
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Report Quality Issue</DialogTitle>
+                  </DialogHeader>
+                  <Form {...issueForm}>
+                    <form onSubmit={issueForm.handleSubmit(handleReportIssue)} className="space-y-4">
+                      <FormField
+                        control={issueForm.control}
+                        name="material"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Material</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={issueForm.control}
+                          name="defectType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Defect Type</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={issueForm.control}
+                          name="severity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Severity</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Low">Low</SelectItem>
+                                  <SelectItem value="Medium">Medium</SelectItem>
+                                  <SelectItem value="High">High</SelectItem>
+                                  <SelectItem value="Critical">Critical</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={issueForm.control}
+                          name="quantity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Quantity</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={issueForm.control}
+                          name="assignedTo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Assigned To</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsReportIssueOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Report Issue</Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
             <DataTable columns={issueColumns} data={qualityIssues} />
           </Card>

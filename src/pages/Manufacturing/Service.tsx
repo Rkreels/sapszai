@@ -7,11 +7,13 @@ import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import PageHeader from '../../components/page/PageHeader';
 import { ArrowLeft, ClipboardCheck, FileText, HardDrive, Monitor, Wrench } from 'lucide-react';
 import { Card } from '../../components/ui/card';
+import { useToast } from '../../components/ui/use-toast';
 
 const ServicePage: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (isEnabled) {
@@ -21,6 +23,41 @@ const ServicePage: React.FC = () => {
 
   const handleCardClick = (action: string) => {
     console.log(`Service - ${action} clicked`);
+    // Navigate to appropriate service pages or open dialogs
+    switch (action) {
+      case 'Create Maintenance Request':
+        toast({
+          title: "Create Maintenance Request",
+          description: "Maintenance request form would open here.",
+        });
+        break;
+      case 'Screen Maintenance Requests':
+        toast({
+          title: "Maintenance Requests",
+          description: "Navigating to maintenance requests list...",
+        });
+        break;
+      case 'Manage Maintenance Notifications':
+        toast({
+          title: "Maintenance Notifications",
+          description: "Opening maintenance notifications management...",
+        });
+        break;
+      case 'Perform Maintenance Jobs':
+        toast({
+          title: "Maintenance Jobs",
+          description: "Opening maintenance jobs interface...",
+        });
+        break;
+      case 'Maintenance Order Costs':
+        toast({
+          title: "Maintenance Order Costs",
+          description: "Opening maintenance cost analysis...",
+        });
+        break;
+      default:
+        console.log(`Unknown action: ${action}`);
+    }
   };
 
   return (

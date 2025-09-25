@@ -10,12 +10,27 @@ import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
 import { useToast } from '../../hooks/use-toast';
+import { listEntities, upsertEntity, generateId } from '../../lib/localCrud';
+
+interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  period: string;
+  grossSalary: number;
+  deductions: number;
+  netSalary: number;
+  status: 'Processed' | 'Pending' | 'Failed';
+  payDate: string;
+}
 
 const Payroll: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
   const { toast } = useToast();
+  const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (isEnabled) {
@@ -23,38 +38,88 @@ const Payroll: React.FC = () => {
     }
   }, [isEnabled, speak]);
 
-  const payrollRecords = [
-    {
-      employeeId: 'EMP-001',
-      employeeName: 'John Smith',
-      period: '2025-01',
-      grossSalary: 5000,
-      deductions: 1200,
-      netSalary: 3800,
-      status: 'Processed',
-      payDate: '2025-01-31'
-    },
-    {
-      employeeId: 'EMP-002',
-      employeeName: 'Sarah Johnson',
-      period: '2025-01',
-      grossSalary: 7500,
-      deductions: 1800,
-      netSalary: 5700,
-      status: 'Processed',
-      payDate: '2025-01-31'
-    },
-    {
-      employeeId: 'EMP-003',
-      employeeName: 'Michael Brown',
-      period: '2025-01',
-      grossSalary: 4200,
-      deductions: 1000,
-      netSalary: 3200,
-      status: 'Pending',
-      payDate: '2025-01-31'
+  useEffect(() => {
+    loadPayrollRecords();
+  }, []);
+
+  const loadPayrollRecords = () => {
+    const existingRecords = listEntities<PayrollRecord>('payrollRecords');
+    if (existingRecords.length === 0) {
+      const sampleRecords: PayrollRecord[] = [
+        {
+          id: generateId('payroll'),
+          employeeId: 'EMP-001',
+          employeeName: 'John Smith',
+          period: '2025-01',
+          grossSalary: 5000,
+          deductions: 1200,
+          netSalary: 3800,
+          status: 'Processed',
+          payDate: '2025-01-31'
+        },
+        {
+          id: generateId('payroll'),
+          employeeId: 'EMP-002',
+          employeeName: 'Sarah Johnson',
+          period: '2025-01',
+          grossSalary: 7500,
+          deductions: 1800,
+          netSalary: 5700,
+          status: 'Processed',
+          payDate: '2025-01-31'
+        },
+        {
+          id: generateId('payroll'),
+          employeeId: 'EMP-003',
+          employeeName: 'Michael Brown',
+          period: '2025-01',
+          grossSalary: 4200,
+          deductions: 1000,
+          netSalary: 3200,
+          status: 'Pending',
+          payDate: '2025-01-31'
+        }
+      ];
+      
+      sampleRecords.forEach(record => upsertEntity('payrollRecords', record as any));
+      setPayrollRecords(sampleRecords);
+    } else {
+      setPayrollRecords(existingRecords);
     }
-  ];
+  };
+
+  const handleProcessPayroll = async () => {
+    setIsProcessing(true);
+    
+    // Simulate payroll processing
+    setTimeout(() => {
+      const pendingRecords = payrollRecords.filter(record => record.status === 'Pending');
+      const processedRecords = pendingRecords.map(record => ({
+        ...record,
+        status: 'Processed' as const,
+        payDate: new Date().toISOString().split('T')[0]
+      }));
+
+      processedRecords.forEach(record => {
+        upsertEntity('payrollRecords', record as any);
+      });
+
+      setPayrollRecords(prev => 
+        prev.map(record => 
+          record.status === 'Pending' 
+            ? { ...record, status: 'Processed' as const, payDate: new Date().toISOString().split('T')[0] }
+            : record
+        )
+      );
+
+      toast({
+        title: 'Payroll Processed',
+        description: `Successfully processed ${processedRecords.length} payroll records.`,
+      });
+
+      setIsProcessing(false);
+    }, 2000);
+  };
 
   const columns = [
     { key: 'employeeId', header: 'Employee ID' },
@@ -137,14 +202,18 @@ const Payroll: React.FC = () => {
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Payroll Records</h2>
-        <Button onClick={() => {
-          toast({
-            title: 'Process Payroll',
-            description: 'Starting payroll processing for current period',
-          });
-        }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Process Payroll
+        <Button onClick={handleProcessPayroll} disabled={isProcessing}>
+          {isProcessing ? (
+            <>
+              <Calculator className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" />
+              Process Payroll
+            </>
+          )}
         </Button>
       </div>
 

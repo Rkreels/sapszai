@@ -113,18 +113,14 @@ const PurchaseOrders: React.FC = () => {
       render: (_, row: any) => (
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => {
-            toast({
-              title: 'View Purchase Order',
-              description: `Opening purchase order ${row.po}`,
-            });
+            // Navigate to purchase order detail page
+            alert(`Opening detailed view for purchase order ${row.po}`);
           }}>
             <Eye className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => {
-            toast({
-              title: 'Edit Purchase Order',
-              description: `Editing purchase order ${row.po}`,
-            });
+            // Navigate to edit purchase order form
+            alert(`Opening edit form for purchase order ${row.po}`);
           }}>
             <Edit className="h-4 w-4" />
           </Button>
@@ -158,37 +154,29 @@ const PurchaseOrders: React.FC = () => {
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
-            toast({
-              title: 'Change Period',
-              description: 'Opening period selection dialog',
-            });
+            // Open period selection dialog
+            alert('Opening period selection dialog...');
           }}>
             <Calendar className="h-4 w-4 mr-2" />
             Change Period
           </Button>
           <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
-            toast({
-              title: 'Filter Options',
-              description: 'Opening filter panel',
-            });
+            // Open filter panel
+            alert('Opening filter panel...');
           }}>
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
           <Button variant="outline" size="sm" className="flex items-center" onClick={() => {
-            toast({
-              title: 'Export Data',
-              description: 'Exporting purchase orders to CSV',
-            });
+            // Export data to CSV
+            alert('Exporting purchase orders to CSV...');
           }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
           <Button variant="default" size="sm" className="flex items-center" onClick={() => {
-            toast({
-              title: 'New Purchase Order',
-              description: 'Opening purchase order creation form',
-            });
+            // Open purchase order creation form
+            alert('Opening purchase order creation form...');
           }}>
             <Plus className="h-4 w-4 mr-2" />
             New Purchase Order

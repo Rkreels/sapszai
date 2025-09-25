@@ -126,10 +126,12 @@ const ContractManagement: React.FC = () => {
       label: 'View',
       icon: <Eye className="h-4 w-4" />,
       onClick: (row: Contract) => {
+        // In a real implementation, this would open a contract detail view
         toast({
           title: 'View Contract',
           description: `Opening contract ${row.contractNumber}`,
         });
+        console.log('View contract:', row);
       },
       variant: 'ghost'
     },
@@ -137,14 +139,53 @@ const ContractManagement: React.FC = () => {
       label: 'Edit',
       icon: <Edit className="h-4 w-4" />,
       onClick: (row: Contract) => {
+        // In a real implementation, this would open an edit form
         toast({
           title: 'Edit Contract',
           description: `Editing contract ${row.contractNumber}`,
         });
+        console.log('Edit contract:', row);
       },
       variant: 'ghost'
     }
   ];
+
+  const handleCreateContract = () => {
+    // In a real implementation, this would open a contract creation form
+    toast({
+      title: 'Create Contract',
+      description: 'Opening contract creation form',
+    });
+    console.log('Create new contract');
+  };
+
+  const handleScheduleRenewal = (contract: Contract) => {
+    // In a real implementation, this would open a renewal scheduling form
+    toast({
+      title: 'Schedule Renewal',
+      description: `Scheduling renewal for ${contract.title}`,
+    });
+    console.log('Schedule renewal for:', contract);
+  };
+
+  const handleRenewContract = (contract: Contract) => {
+    // In a real implementation, this would process the contract renewal
+    const renewedContract = {
+      ...contract,
+      endDate: new Date(new Date(contract.endDate).setFullYear(new Date(contract.endDate).getFullYear() + 1)).toISOString().split('T')[0]
+    };
+    
+    const updatedContracts = contracts.map(c => 
+      c.id === contract.id ? renewedContract : c
+    );
+    setContracts(updatedContracts);
+    
+    toast({
+      title: 'Contract Renewed',
+      description: `Contract ${contract.contractNumber} has been renewed until ${renewedContract.endDate}`,
+    });
+    console.log('Renewed contract:', contract);
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-8">
@@ -212,12 +253,7 @@ const ContractManagement: React.FC = () => {
               <CardTitle className="flex justify-between items-center">
                 Contract Portfolio
                 <Button 
-                  onClick={() => {
-                    toast({
-                      title: 'Create Contract',
-                      description: 'Opening contract creation form',
-                    });
-                  }}
+                  onClick={handleCreateContract}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Create Contract
@@ -258,24 +294,14 @@ const ContractManagement: React.FC = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => {
-                            toast({
-                              title: 'Schedule Renewal',
-                              description: `Scheduling renewal for ${contract.title}`,
-                            });
-                          }}
+                          onClick={() => handleScheduleRenewal(contract)}
                         >
                           <Calendar className="h-4 w-4 mr-2" />
                           Schedule Renewal
                         </Button>
                         <Button 
                           size="sm"
-                          onClick={() => {
-                            toast({
-                              title: 'Renew Contract',
-                              description: `Renewing contract ${contract.contractNumber}`,
-                            });
-                          }}
+                          onClick={() => handleRenewContract(contract)}
                         >
                           Renew Now
                         </Button>

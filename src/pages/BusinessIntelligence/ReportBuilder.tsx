@@ -9,11 +9,13 @@ import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../components/ui/use-toast';
 
 const ReportBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isEnabled) {
@@ -64,7 +66,12 @@ const ReportBuilder: React.FC = () => {
         <TabsContent value="reports" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Existing Reports</h3>
-            <Button>
+            <Button onClick={() => {
+              toast({
+                title: "New Report",
+                description: "Report creation wizard would open here.",
+              });
+            }}>
               <FileText className="h-4 w-4 mr-2" />
               New Report
             </Button>
@@ -119,7 +126,12 @@ const ReportBuilder: React.FC = () => {
                 </div>
                 <h4 className="font-medium">{template}</h4>
                 <p className="text-sm text-gray-600 mb-3">Pre-built report template</p>
-                <Button size="sm" variant="outline" className="w-full">Use Template</Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => {
+                  toast({
+                    title: "Use Template",
+                    description: `Template "${template}" would be applied to create a new report.`,
+                  });
+                }}>Use Template</Button>
               </Card>
             ))}
           </div>
@@ -136,10 +148,20 @@ const ReportBuilder: React.FC = () => {
                     <p className="text-sm text-gray-600">Next run: Tomorrow 9:00 AM</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      toast({
+                        title: "Download Report",
+                        description: `Report "${report.name}" would be downloaded.`,
+                      });
+                    }}>
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => {
+                      toast({
+                        title: "Share Report",
+                        description: `Sharing options for "${report.name}" would be displayed.`,
+                      });
+                    }}>
                       <Share className="h-4 w-4" />
                     </Button>
                   </div>

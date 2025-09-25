@@ -36,7 +36,7 @@ const BusinessIntelligence: React.FC = () => {
       title: "Navigation",
       description: `Opening ${title}...`,
     });
-    // navigate(`/business-intelligence/${path}`);
+    navigate(`/business-intelligence/${path}`);
   };
 
   // Sample data for charts

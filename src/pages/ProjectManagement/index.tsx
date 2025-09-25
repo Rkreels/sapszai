@@ -279,8 +279,8 @@ const ProjectManagement: React.FC = () => {
     { 
       key: "actions", 
       header: "Actions",
-      render: () => (
-        <Button variant="ghost" size="sm">Assign</Button>
+      render: (_, row: any) => (
+        <Button variant="ghost" size="sm" onClick={() => alert(`Opening assignment form for ${row.name}...`)}>Assign</Button>
       )
     }
   ];

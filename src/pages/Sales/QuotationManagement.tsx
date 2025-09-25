@@ -275,11 +275,36 @@ const QuotationManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Quotation Management</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.xlsx';
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0];
+              if (file) {
+                toast({ title: 'Import Started', description: `Importing quotations from ${file.name}` });
+              }
+            };
+            input.click();
+          }}>
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            const csvData = [
+              ['Quotation ID', 'Customer', 'Status', 'Valid Until', 'Total Amount', 'Currency', 'Sales Rep'],
+              ...quotations.map(q => [q.id, q.customer, q.status, q.validUntil, q.totalAmount, q.currency, q.salesRep])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quotations.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast({ title: 'Export Complete', description: 'Quotation data exported successfully' });
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -435,17 +460,32 @@ const QuotationManagement: React.FC = () => {
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold">Standard Template</h3>
                   <p className="text-sm text-muted-foreground">Basic quotation format</p>
-                  <Button className="w-full mt-2" variant="outline">Use Template</Button>
+                  <Button className="w-full mt-2" variant="outline" onClick={() => {
+                    setSelectedQuotation(null);
+                    setIsEditing(false);
+                    setIsDialogOpen(true);
+                    toast({ title: 'Template Selected', description: 'Standard template loaded for new quotation' });
+                  }}>Use Template</Button>
                 </div>
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold">Service Template</h3>
                   <p className="text-sm text-muted-foreground">For service offerings</p>
-                  <Button className="w-full mt-2" variant="outline">Use Template</Button>
+                  <Button className="w-full mt-2" variant="outline" onClick={() => {
+                    setSelectedQuotation(null);
+                    setIsEditing(false);
+                    setIsDialogOpen(true);
+                    toast({ title: 'Template Selected', description: 'Service template loaded for new quotation' });
+                  }}>Use Template</Button>
                 </div>
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold">Product Template</h3>
                   <p className="text-sm text-muted-foreground">For product sales</p>
-                  <Button className="w-full mt-2" variant="outline">Use Template</Button>
+                  <Button className="w-full mt-2" variant="outline" onClick={() => {
+                    setSelectedQuotation(null);
+                    setIsEditing(false);
+                    setIsDialogOpen(true);
+                    toast({ title: 'Template Selected', description: 'Product template loaded for new quotation' });
+                  }}>Use Template</Button>
                 </div>
               </div>
             </CardContent>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SAPSection from '../components/SAPSection';
 import SAPTile from '../components/SAPTile';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
@@ -6,7 +7,10 @@ import { Calendar, ChevronDown, Clock, ListChecks } from 'lucide-react';
 
 const Index: React.FC = () => {
   const [isVoiceAssistantEnabled, setIsVoiceAssistantEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState('Recommended');
+  const [showInfoBanner, setShowInfoBanner] = useState(true);
   const { speak } = useVoiceAssistant();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const checkVoiceAssistant = () => {
@@ -65,8 +69,9 @@ const Index: React.FC = () => {
           subtitle="Trial Center" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="This tile gives you access to the overview dashboard of the Trial Center module."
+          onClick={() => navigate('/trial-center')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-overview text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-overview text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">↗</span>
           </div>
         </SAPTile>
@@ -74,8 +79,9 @@ const Index: React.FC = () => {
           title="Finance" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access the Finance module for accounting, financial reporting, and treasury management."
+          onClick={() => navigate('/finance')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-finance text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-finance text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">📈</span>
           </div>
         </SAPTile>
@@ -83,8 +89,9 @@ const Index: React.FC = () => {
           title="Manufacturing and Supply Chain" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access manufacturing operations, supply chain planning, and inventory management."
+          onClick={() => navigate('/manufacturing')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-manufacturing text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-manufacturing text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">🏭</span>
           </div>
         </SAPTile>
@@ -92,8 +99,9 @@ const Index: React.FC = () => {
           title="Procurement" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access procurement functions like vendor management, purchase orders, and contract management."
+          onClick={() => navigate('/procurement')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-procurement text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-procurement text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">🛒</span>
           </div>
         </SAPTile>
@@ -101,8 +109,9 @@ const Index: React.FC = () => {
           title="Project Management" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access project planning, execution, and monitoring tools."
+          onClick={() => navigate('/project-management')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-project text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-project text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">📋</span>
           </div>
         </SAPTile>
@@ -110,8 +119,9 @@ const Index: React.FC = () => {
           title="Sales" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access sales order management, billing, and customer relationship management functions."
+          onClick={() => navigate('/sales')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-sales text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-sales text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">💼</span>
           </div>
         </SAPTile>
@@ -119,8 +129,9 @@ const Index: React.FC = () => {
           title="Other" 
           isVoiceAssistantEnabled={isVoiceAssistantEnabled}
           description="Access additional modules and functions not categorized in the main sections."
+          onClick={() => navigate('/master-data')}
         >
-          <div className="flex items-center justify-center h-16 w-full bg-other text-white rounded">
+          <div className="flex items-center justify-center h-16 w-full bg-other text-white rounded cursor-pointer hover:opacity-80">
             <span className="text-2xl">⚙️</span>
           </div>
         </SAPTile>
@@ -133,36 +144,65 @@ const Index: React.FC = () => {
       >
         <div className="col-span-full mb-2">
           <div className="flex items-center border-b">
-            <button className="px-4 py-2 font-medium text-sm hover:bg-gray-50">Favorites</button>
-            <button className="px-4 py-2 font-medium text-sm hover:bg-gray-50">Most Used</button>
-            <button className="px-4 py-2 font-medium text-sm hover:bg-gray-50">Recently Used</button>
-            <button className="px-4 py-2 font-medium text-sm text-sap-blue border-b-2 border-sap-blue">Recommended</button>
+            <button 
+              className={`px-4 py-2 font-medium text-sm hover:bg-gray-50 ${activeTab === 'Favorites' ? 'text-sap-blue border-b-2 border-sap-blue' : ''}`}
+              onClick={() => setActiveTab('Favorites')}
+            >
+              Favorites
+            </button>
+            <button 
+              className={`px-4 py-2 font-medium text-sm hover:bg-gray-50 ${activeTab === 'Most Used' ? 'text-sap-blue border-b-2 border-sap-blue' : ''}`}
+              onClick={() => setActiveTab('Most Used')}
+            >
+              Most Used
+            </button>
+            <button 
+              className={`px-4 py-2 font-medium text-sm hover:bg-gray-50 ${activeTab === 'Recently Used' ? 'text-sap-blue border-b-2 border-sap-blue' : ''}`}
+              onClick={() => setActiveTab('Recently Used')}
+            >
+              Recently Used
+            </button>
+            <button 
+              className={`px-4 py-2 font-medium text-sm ${activeTab === 'Recommended' ? 'text-sap-blue border-b-2 border-sap-blue' : ''}`}
+              onClick={() => setActiveTab('Recommended')}
+            >
+              Recommended
+            </button>
           </div>
         </div>
 
         <div className="col-span-full">
+        {showInfoBanner && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md flex items-center text-sm">
             <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-500 text-white rounded-full mr-2 text-xs">i</span>
             <p>Here, you can see applications that are recommended to you by SAP Business AI. You can choose to disable this tab using the <span className="text-blue-500">settings</span>.</p>
-            <button className="ml-auto">
+            <button 
+              className="ml-auto"
+              onClick={() => setShowInfoBanner(false)}
+            >
               <span className="sr-only">Close</span>
               <span className="text-gray-400 hover:text-gray-600">×</span>
             </button>
           </div>
+        )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { title: "Create Supplier Invoice", icon: "📄", color: "bg-purple-600" },
-              { title: "Create Customer Projects", icon: "📋", color: "bg-blue-600" },
-              { title: "Plan Customer Projects", icon: "📅", color: "bg-red-600" },
-              { title: "Display Line Items in General Ledger", icon: "📊", color: "bg-purple-600" },
-              { title: "Manage Supplier Line Items", icon: "📝", color: "bg-blue-600" },
-              { title: "Supplier Invoices List", icon: "📃", color: "bg-purple-600" },
-              { title: "Manage Customer Line Items", icon: "👥", color: "bg-purple-600" },
-              { title: "Manage Billing Documents", icon: "📑", color: "bg-blue-600" },
-              { title: "Manage My Timesheet", icon: "⏱️", color: "bg-red-600" },
+              { title: "Create Supplier Invoice", icon: "📄", color: "bg-purple-600", path: '/procurement/invoice-verification' },
+              { title: "Create Customer Projects", icon: "📋", color: "bg-blue-600", path: '/project-management' },
+              { title: "Plan Customer Projects", icon: "📅", color: "bg-red-600", path: '/project-management/planning' },
+              { title: "Display Line Items in General Ledger", icon: "📊", color: "bg-purple-600", path: '/finance/general-ledger' },
+              { title: "Manage Supplier Line Items", icon: "📝", color: "bg-blue-600", path: '/finance/accounts-payable' },
+              { title: "Supplier Invoices List", icon: "📃", color: "bg-purple-600", path: '/procurement/invoice-verification' },
+              { title: "Manage Customer Line Items", icon: "👥", color: "bg-purple-600", path: '/finance/accounts-receivable' },
+              { title: "Manage Billing Documents", icon: "📑", color: "bg-blue-600", path: '/sales/billing' },
+              { title: "Manage My Timesheet", icon: "⏱️", color: "bg-red-600", path: '/human-resources/time-management' },
             ].map((app, index) => (
-              <div key={index} className="flex items-center p-3 border rounded bg-white">
+              <div 
+                key={index} 
+                className="flex items-center p-3 border rounded bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => navigate(app.path)}
+              >
                 <div className={`w-8 h-8 rounded flex items-center justify-center text-white ${app.color}`}>
                   <span>{app.icon}</span>
                 </div>
@@ -170,7 +210,10 @@ const Index: React.FC = () => {
               </div>
             ))}
             
-            <div className="flex items-center p-3 border rounded bg-white">
+            <div 
+              className="flex items-center p-3 border rounded bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => navigate('/human-resources')}
+            >
               <div className="w-8 h-8 rounded bg-purple-600 flex items-center justify-center text-white">
                 <span>📬</span>
               </div>
@@ -189,7 +232,18 @@ const Index: React.FC = () => {
         description="This section provides key business insights and analytics."
       >
         <div className="col-span-full flex justify-end mb-2">
-          <button className="text-sm text-blue-500">Add Tiles</button>
+          <button 
+            className="text-sm text-blue-500 hover:text-blue-700"
+            onClick={() => {
+              if (isVoiceAssistantEnabled) {
+                speak('Opening tile configuration panel');
+              }
+              // Placeholder for add tiles functionality
+              alert('Add Tiles functionality would open a configuration panel');
+            }}
+          >
+            Add Tiles
+          </button>
         </div>
         
         <SAPTile 

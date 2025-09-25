@@ -206,10 +206,8 @@ const InventoryManagement = () => {
       render: (_: string, row: any) => (
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => {
-            toast({
-              title: 'View Material Details',
-              description: `Opening details for material ${row.material}`,
-            });
+            setSelectedItem(row);
+            setIsEditDialogOpen(true);
           }}>
             <Eye className="h-3 w-3" />
           </Button>

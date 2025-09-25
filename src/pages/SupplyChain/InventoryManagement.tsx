@@ -222,7 +222,10 @@ const InventoryManagement: React.FC = () => {
       header: 'Actions',
       render: (_: string, row: any) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => alert(`Viewing details for ${row.material}`)}>
+          <Button variant="outline" size="sm" onClick={() => {
+            // Show detailed view for material
+            alert(`Viewing details for ${row.material}`);
+          }}>
             <Eye className="h-3 w-3" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => handleEditItem(row)}>

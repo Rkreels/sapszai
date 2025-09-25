@@ -4,16 +4,49 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { ArrowLeft, Plus, Clock, Calendar, CheckCircle } from 'lucide-react';
 import PageHeader from '../../components/page/PageHeader';
 import { useVoiceAssistantContext } from '../../context/VoiceAssistantContext';
 import { useVoiceAssistant } from '../../hooks/useVoiceAssistant';
 import DataTable from '../../components/data/DataTable';
+import { useToast } from '../../hooks/use-toast';
+import { listEntities, upsertEntity, generateId } from '../../lib/localCrud';
+
+interface TimeRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  date: string;
+  clockIn: string;
+  clockOut: string;
+  totalHours: number;
+  breakTime: number;
+  overtime: number;
+  status: 'Complete' | 'In Progress' | 'Absent';
+}
 
 const TimeManagement: React.FC = () => {
   const navigate = useNavigate();
   const { isEnabled } = useVoiceAssistantContext();
   const { speak } = useVoiceAssistant();
+  const { toast } = useToast();
+  const [timeRecords, setTimeRecords] = useState<TimeRecord[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newTimeRecord, setNewTimeRecord] = useState<Partial<TimeRecord>>({
+    employeeId: '',
+    employeeName: '',
+    date: new Date().toISOString().split('T')[0],
+    clockIn: '',
+    clockOut: '',
+    totalHours: 0,
+    breakTime: 0,
+    overtime: 0,
+    status: 'In Progress'
+  });
 
   useEffect(() => {
     if (isEnabled) {
@@ -21,41 +54,100 @@ const TimeManagement: React.FC = () => {
     }
   }, [isEnabled, speak]);
 
-  const timeRecords = [
-    {
-      employeeId: 'EMP-001',
-      employeeName: 'John Smith',
-      date: '2025-01-20',
-      clockIn: '09:00',
-      clockOut: '17:30',
-      totalHours: 8.5,
-      breakTime: 0.5,
-      overtime: 0,
-      status: 'Complete'
-    },
-    {
-      employeeId: 'EMP-002',
-      employeeName: 'Sarah Johnson',
-      date: '2025-01-20',
-      clockIn: '08:30',
-      clockOut: '18:00',
-      totalHours: 9.5,
-      breakTime: 1,
-      overtime: 1,
-      status: 'Complete'
-    },
-    {
-      employeeId: 'EMP-003',
-      employeeName: 'Michael Brown',
-      date: '2025-01-20',
-      clockIn: '09:15',
-      clockOut: '-',
-      totalHours: 0,
-      breakTime: 0,
-      overtime: 0,
-      status: 'In Progress'
+  useEffect(() => {
+    loadTimeRecords();
+  }, []);
+
+  const loadTimeRecords = () => {
+    const existingRecords = listEntities<TimeRecord>('timeRecords');
+    if (existingRecords.length === 0) {
+      const sampleRecords: TimeRecord[] = [
+        {
+          id: generateId('time'),
+          employeeId: 'EMP-001',
+          employeeName: 'John Smith',
+          date: '2025-01-20',
+          clockIn: '09:00',
+          clockOut: '17:30',
+          totalHours: 8.5,
+          breakTime: 0.5,
+          overtime: 0,
+          status: 'Complete'
+        },
+        {
+          id: generateId('time'),
+          employeeId: 'EMP-002',
+          employeeName: 'Sarah Johnson',
+          date: '2025-01-20',
+          clockIn: '08:30',
+          clockOut: '18:00',
+          totalHours: 9.5,
+          breakTime: 1,
+          overtime: 1,
+          status: 'Complete'
+        },
+        {
+          id: generateId('time'),
+          employeeId: 'EMP-003',
+          employeeName: 'Michael Brown',
+          date: '2025-01-20',
+          clockIn: '09:15',
+          clockOut: '-',
+          totalHours: 0,
+          breakTime: 0,
+          overtime: 0,
+          status: 'In Progress'
+        }
+      ];
+      
+      sampleRecords.forEach(record => upsertEntity('timeRecords', record as any));
+      setTimeRecords(sampleRecords);
+    } else {
+      setTimeRecords(existingRecords);
     }
-  ];
+  };
+
+  const handleAddTimeEntry = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveTimeEntry = () => {
+    if (newTimeRecord.employeeId && newTimeRecord.employeeName && newTimeRecord.date) {
+      const timeRecord: TimeRecord = {
+        id: generateId('time'),
+        employeeId: newTimeRecord.employeeId || '',
+        employeeName: newTimeRecord.employeeName || '',
+        date: newTimeRecord.date || '',
+        clockIn: newTimeRecord.clockIn || '',
+        clockOut: newTimeRecord.clockOut || '',
+        totalHours: newTimeRecord.totalHours || 0,
+        breakTime: newTimeRecord.breakTime || 0,
+        overtime: newTimeRecord.overtime || 0,
+        status: newTimeRecord.status as 'Complete' | 'In Progress' | 'Absent' || 'In Progress'
+      };
+
+      upsertEntity('timeRecords', timeRecord as any);
+      setTimeRecords(prev => [...prev, timeRecord]);
+      
+      toast({
+        title: 'Time Entry Added',
+        description: 'Time record has been successfully created.',
+      });
+
+      setIsDialogOpen(false);
+      setNewTimeRecord({
+        employeeId: '',
+        employeeName: '',
+        date: new Date().toISOString().split('T')[0],
+        clockIn: '',
+        clockOut: '',
+        totalHours: 0,
+        breakTime: 0,
+        overtime: 0,
+        status: 'In Progress'
+      });
+    }
+  };
 
   const columns = [
     { key: 'employeeId', header: 'Employee ID' },
@@ -127,7 +219,7 @@ const TimeManagement: React.FC = () => {
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Time Records</h2>
-        <Button>
+        <Button onClick={handleAddTimeEntry}>
           <Plus className="h-4 w-4 mr-2" />
           Add Time Entry
         </Button>
@@ -136,6 +228,85 @@ const TimeManagement: React.FC = () => {
       <Card className="p-6">
         <DataTable columns={columns} data={timeRecords} />
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Time Entry</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="employeeId">Employee ID</Label>
+              <Input
+                id="employeeId"
+                value={newTimeRecord.employeeId || ''}
+                onChange={(e) => setNewTimeRecord(prev => ({ ...prev, employeeId: e.target.value }))}
+                placeholder="Enter employee ID"
+              />
+            </div>
+            <div>
+              <Label htmlFor="employeeName">Employee Name</Label>
+              <Input
+                id="employeeName"
+                value={newTimeRecord.employeeName || ''}
+                onChange={(e) => setNewTimeRecord(prev => ({ ...prev, employeeName: e.target.value }))}
+                placeholder="Enter employee name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={newTimeRecord.date || ''}
+                onChange={(e) => setNewTimeRecord(prev => ({ ...prev, date: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clockIn">Clock In</Label>
+              <Input
+                id="clockIn"
+                type="time"
+                value={newTimeRecord.clockIn || ''}
+                onChange={(e) => setNewTimeRecord(prev => ({ ...prev, clockIn: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clockOut">Clock Out</Label>
+              <Input
+                id="clockOut"
+                type="time"
+                value={newTimeRecord.clockOut || ''}
+                onChange={(e) => setNewTimeRecord(prev => ({ ...prev, clockOut: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={newTimeRecord.status}
+                onValueChange={(value) => setNewTimeRecord(prev => ({ ...prev, status: value as 'Complete' | 'In Progress' | 'Absent' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Complete">Complete</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Absent">Absent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveTimeEntry}>
+                Save Time Entry
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -319,6 +319,8 @@ const ProductCatalog: React.FC = () => {
             variant="ghost" 
             size="sm"
             onClick={() => {
+              setSelectedProduct(row);
+              setActiveTab('details');
               toast({
                 title: "Product Details",
                 description: `Viewing details for ${row.name}`,
@@ -362,8 +364,9 @@ const ProductCatalog: React.FC = () => {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="details">Product Details</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
         </TabsList>
@@ -618,27 +621,112 @@ const ProductCatalog: React.FC = () => {
                   </Badge>
                 </div>
               </div>
-              <Button variant="outline" className="w-full mt-4">View Inventory Report</Button>
+              <Button variant="outline" className="w-full mt-4" onClick={() => {
+                toast({
+                  title: "Inventory Report",
+                  description: "Generating inventory report",
+                });
+              }}>View Inventory Report</Button>
             </Card>
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={handleImportProducts}>
                   Import Products
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={handleExportProducts}>
                   Export Catalog
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => {
+                  toast({
+                    title: "Price Updates",
+                    description: "Opening price update interface",
+                  });
+                }}>
                   Price Updates
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => {
+                  toast({
+                    title: "Product Media",
+                    description: "Opening media management interface",
+                  });
+                }}>
                   Product Media
                 </Button>
               </div>
             </Card>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="details">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Product Details</h3>
+            {selectedProduct ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Product ID</h4>
+                    <p className="font-semibold">{selectedProduct.id}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">SKU</h4>
+                    <p className="font-semibold">{selectedProduct.sku || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Name</h4>
+                    <p className="font-semibold">{selectedProduct.name}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Category</h4>
+                    <p className="font-semibold">{selectedProduct.category}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Price</h4>
+                    <p className="font-semibold">{selectedProduct.price}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Stock</h4>
+                    <p className="font-semibold">{selectedProduct.stock}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Status</h4>
+                    <Badge variant={
+                      selectedProduct.status === 'Active' ? 'default' : 
+                      selectedProduct.status === 'Low Stock' ? 'secondary' : 
+                      selectedProduct.status === 'Out of Stock' ? 'destructive' : 'outline'
+                    }>
+                      {selectedProduct.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Supplier</h4>
+                    <p className="font-semibold">{selectedProduct.supplier || 'N/A'}</p>
+                  </div>
+                </div>
+                {selectedProduct.description && (
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Description</h4>
+                    <p className="mt-1">{selectedProduct.description}</p>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button onClick={() => handleEditProduct(selectedProduct)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Product
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveTab('products')}>
+                    Back to Products
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border rounded-md p-6 text-center">
+                <p>Select a product to view details</p>
+                <p className="text-sm mt-2">Click the eye icon on any product to see detailed information</p>
+              </div>
+            )}
+          </Card>
         </TabsContent>
         
         <TabsContent value="categories">

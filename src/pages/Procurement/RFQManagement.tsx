@@ -259,11 +259,21 @@ const RFQManagement: React.FC = () => {
                         <p className="text-sm">Responses: {rfq.responsesReceived}/{rfq.suppliersInvited}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => {
+                          toast({
+                            title: 'View Responses',
+                            description: `Opening responses for ${rfq.rfqNumber}`,
+                          });
+                        }}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Responses
                         </Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => {
+                          toast({
+                            title: 'Evaluate RFQ',
+                            description: `Opening evaluation for ${rfq.rfqNumber}`,
+                          });
+                        }}>
                           <Award className="h-4 w-4 mr-2" />
                           Evaluate
                         </Button>
