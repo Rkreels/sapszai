@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
-import { Search, AlertCircle, Check, Clock, Ban, RefreshCw } from 'lucide-react';
+import { Search, AlertCircle, Check, Clock, Ban, RefreshCw, Eye, Settings } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import {
   Table,
@@ -15,9 +15,17 @@ import {
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Progress } from '../../components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { useToast } from '../../hooks/use-toast';
 
 const CreditManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState('checks');
+  const [selectedCheck, setSelectedCheck] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [isViewCheckDialogOpen, setIsViewCheckDialogOpen] = useState(false);
+  const [isManageCustomerDialogOpen, setIsManageCustomerDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const creditChecks = [
     { id: 'CC001', customer: 'Acme Corp', orderRef: 'SO78954', amount: '$28,500', checkDate: '2025-05-20 14:30', status: 'Approved', limit: '$100,000', exposure: '$72,500' },
@@ -46,6 +54,24 @@ const CreditManagement: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  const handleViewCheckDetails = (check: any) => {
+    setSelectedCheck(check);
+    setIsViewCheckDialogOpen(true);
+  };
+
+  const handleManageCustomer = (customer: any) => {
+    setSelectedCustomer(customer);
+    setIsManageCustomerDialogOpen(true);
+  };
+
+  const handleUpdateCustomerCredit = () => {
+    toast({
+      title: 'Customer Credit Updated',
+      description: 'Customer credit information has been updated successfully.',
+    });
+    setIsManageCustomerDialogOpen(false);
   };
 
   const getRiskBadge = (risk: string) => {
@@ -130,7 +156,10 @@ const CreditManagement: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">Details</Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleViewCheckDetails(creditCheck)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Details
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -193,7 +222,10 @@ const CreditManagement: React.FC = () => {
                           <TableCell>{customer.lastReview}</TableCell>
                           <TableCell>{customer.nextReview}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm">Manage</Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleManageCustomer(customer)}>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Manage
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
@@ -232,6 +264,109 @@ const CreditManagement: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Check Details Dialog */}
+      <Dialog open={isViewCheckDialogOpen} onOpenChange={setIsViewCheckDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Credit Check Details</DialogTitle>
+          </DialogHeader>
+          {selectedCheck && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Check ID</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Customer</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.customer}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Order Reference</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.orderRef}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Amount</Label>
+                  <p className="text-lg font-semibold text-green-600">{selectedCheck.amount}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Check Date</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.checkDate}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                  <Badge variant={selectedCheck.status === 'Approved' ? 'default' : selectedCheck.status === 'Pending' ? 'secondary' : 'destructive'}>
+                    {selectedCheck.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Credit Limit</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.limit}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Current Exposure</Label>
+                  <p className="text-lg font-semibold">{selectedCheck.exposure}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsViewCheckDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Customer Dialog */}
+      <Dialog open={isManageCustomerDialogOpen} onOpenChange={setIsManageCustomerDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Manage Customer Credit</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Customer ID</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Customer Name</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.name}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Credit Limit</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.creditLimit}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Current Exposure</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.currentExposure}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Risk Category</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.riskCategory}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Last Review</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.lastReview}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Next Review</Label>
+                  <p className="text-lg font-semibold">{selectedCustomer.nextReview}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsManageCustomerDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateCustomerCredit}>Update Credit</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

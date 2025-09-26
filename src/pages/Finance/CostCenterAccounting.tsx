@@ -400,7 +400,7 @@ const CostCenterAccounting: React.FC = () => {
                         New Cost Center
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>Create New Cost Center</DialogTitle>
                       </DialogHeader>
@@ -598,7 +598,7 @@ const CostCenterAccounting: React.FC = () => {
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Edit Cost Center</DialogTitle>
           </DialogHeader>

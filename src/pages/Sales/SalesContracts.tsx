@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
-import { Search, Plus, Filter, FileText } from 'lucide-react';
+import { Search, Plus, Filter, FileText, Eye, Edit, Download } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { 
   Table, 
@@ -20,9 +20,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select';
+import { Badge } from '../../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { useToast } from '../../hooks/use-toast';
 
 const SalesContracts: React.FC = () => {
   const [activeTab, setActiveTab] = useState('agreements');
+  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
+  const [isViewContractDialogOpen, setIsViewContractDialogOpen] = useState(false);
+  const [isEditScheduleDialogOpen, setIsEditScheduleDialogOpen] = useState(false);
+  const { toast } = useToast();
   
   const contracts = [
     { id: 'SC001', type: 'Volume Agreement', customer: 'Acme Corp', startDate: '2025-01-01', endDate: '2025-12-31', value: '$250,000', status: 'Active' },
@@ -39,6 +48,24 @@ const SalesContracts: React.FC = () => {
     { id: 'SA004', contract: 'SC003', scheduledDate: '2025-04-05', quantity: '500 units', product: 'Consumer Electronics', deliveryStatus: 'Confirmed' },
     { id: 'SA005', contract: 'SC002', scheduledDate: '2025-03-15', quantity: 'N/A', product: 'Maintenance Services', deliveryStatus: 'Scheduled' },
   ];
+
+  const handleViewContract = (contract: any) => {
+    setSelectedContract(contract);
+    setIsViewContractDialogOpen(true);
+  };
+
+  const handleEditSchedule = (schedule: any) => {
+    setSelectedSchedule(schedule);
+    setIsEditScheduleDialogOpen(true);
+  };
+
+  const handleUpdateSchedule = () => {
+    toast({
+      title: 'Schedule Updated',
+      description: 'Delivery schedule has been updated successfully.',
+    });
+    setIsEditScheduleDialogOpen(false);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -121,7 +148,7 @@ const SalesContracts: React.FC = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleViewContract(contract)}>
                             <FileText className="h-4 w-4 mr-2" />
                             View
                           </Button>
@@ -190,7 +217,9 @@ const SalesContracts: React.FC = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">Edit</Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditSchedule(schedule)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -228,6 +257,97 @@ const SalesContracts: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Contract Dialog */}
+      <Dialog open={isViewContractDialogOpen} onOpenChange={setIsViewContractDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Contract Details</DialogTitle>
+          </DialogHeader>
+          {selectedContract && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Contract ID</Label>
+                  <p className="text-lg font-semibold">{selectedContract.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Contract Type</Label>
+                  <p className="text-lg font-semibold">{selectedContract.type}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Customer</Label>
+                  <p className="text-lg font-semibold">{selectedContract.customer}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Contract Value</Label>
+                  <p className="text-lg font-semibold text-green-600">{selectedContract.value}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Start Date</Label>
+                  <p className="text-lg font-semibold">{selectedContract.startDate}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">End Date</Label>
+                  <p className="text-lg font-semibold">{selectedContract.endDate}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                  <Badge variant={selectedContract.status === 'Active' ? 'default' : 'secondary'}>
+                    {selectedContract.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsViewContractDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={isEditScheduleDialogOpen} onOpenChange={setIsEditScheduleDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto sm:max-w-md lg:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Delivery Schedule</DialogTitle>
+          </DialogHeader>
+          {selectedSchedule && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Schedule ID</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.id}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Contract</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.contract}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Scheduled Date</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.scheduledDate}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Quantity</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.quantity}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Product</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.product}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Delivery Status</Label>
+                <p className="text-lg font-semibold">{selectedSchedule.deliveryStatus}</p>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditScheduleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateSchedule}>Update Schedule</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

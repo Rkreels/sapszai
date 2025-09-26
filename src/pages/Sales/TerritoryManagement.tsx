@@ -52,8 +52,11 @@ const TerritoryManagement: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTerritory, setSelectedTerritory] = useState<Territory | null>(null);
+  const [selectedRule, setSelectedRule] = useState<TerritoryRule | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
+  const [isEditingRule, setIsEditingRule] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -206,6 +209,20 @@ const TerritoryManagement: React.FC = () => {
     });
   };
 
+  const handleEditRule = (rule: TerritoryRule) => {
+    setSelectedRule(rule);
+    setIsEditingRule(true);
+    setIsRuleDialogOpen(true);
+  };
+
+  const handleDeleteRule = (ruleId: string) => {
+    setTerritoryRules(prev => prev.filter(r => r.id !== ruleId));
+    toast({
+      title: 'Rule Deleted',
+      description: 'Territory rule has been successfully removed.',
+    });
+  };
+
   const territoryColumns = [
     { key: 'name', header: 'Territory Name' },
     { key: 'region', header: 'Region' },
@@ -269,10 +286,10 @@ const TerritoryManagement: React.FC = () => {
       header: 'Actions',
       render: (_, row: TerritoryRule) => (
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleEditRule(row)}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleDeleteRule(row.id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

@@ -77,6 +77,11 @@ const BankAccounts: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewAccountDialogOpen, setIsViewAccountDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isViewTransactionDialogOpen, setIsViewTransactionDialogOpen] = useState(false);
+  const [selectedStatement, setSelectedStatement] = useState<BankStatement | null>(null);
+  const [isViewStatementDialogOpen, setIsViewStatementDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -140,6 +145,21 @@ const BankAccounts: React.FC = () => {
     setBankAccounts(bankAccounts.filter(acc => acc.id !== id));
   };
 
+  const handleViewAccount = (account: BankAccount) => {
+    setSelectedAccount(account);
+    setIsViewAccountDialogOpen(true);
+  };
+
+  const handleViewTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsViewTransactionDialogOpen(true);
+  };
+
+  const handleViewStatement = (statement: BankStatement) => {
+    setSelectedStatement(statement);
+    setIsViewStatementDialogOpen(true);
+  };
+
   const accountColumns: Column[] = [
     { key: 'id', header: 'Account ID' },
     { key: 'accountNumber', header: 'Account Number' },
@@ -166,7 +186,7 @@ const BankAccounts: React.FC = () => {
       header: 'Actions',
       render: (_: string | number, row: RenderableRow) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => handleViewAccount(row)}><Eye className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => handleEditAccount(row)}><Edit className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm" onClick={() => handleDeleteAccount(row.id)}><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -200,7 +220,7 @@ const BankAccounts: React.FC = () => {
       header: 'Actions',
       render: (_: string | number, row: RenderableRow) => (
         <div className="flex space-x-1">
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => handleViewTransaction(row)}><Eye className="h-4 w-4" /></Button>
           <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
         </div>
       )
@@ -227,7 +247,7 @@ const BankAccounts: React.FC = () => {
       render: (_: string | number, row: RenderableRow) => (
         <div className="flex space-x-1">
           <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => handleViewStatement(row)}><Eye className="h-4 w-4" /></Button>
         </div>
       )
     }
@@ -328,7 +348,7 @@ const BankAccounts: React.FC = () => {
                         Add Account
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>Add New Bank Account</DialogTitle>
                       </DialogHeader>
@@ -660,7 +680,7 @@ const BankAccounts: React.FC = () => {
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Edit Bank Account</DialogTitle>
           </DialogHeader>
@@ -791,6 +811,164 @@ const BankAccounts: React.FC = () => {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Account Dialog */}
+      <Dialog open={isViewAccountDialogOpen} onOpenChange={setIsViewAccountDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Bank Account Details</DialogTitle>
+          </DialogHeader>
+          {selectedAccount && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Account ID</Label>
+                  <p className="text-lg font-semibold">{selectedAccount.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Account Number</Label>
+                  <p className="text-lg font-semibold">{selectedAccount.accountNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Bank Name</Label>
+                  <p className="text-lg font-semibold">{selectedAccount.bankName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Account Type</Label>
+                  <p className="text-lg font-semibold">{selectedAccount.accountType}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Currency</Label>
+                  <p className="text-lg font-semibold">{selectedAccount.currency}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Balance</Label>
+                  <p className="text-lg font-semibold text-green-600">{selectedAccount.currency} {selectedAccount.balance}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">IBAN</Label>
+                  <p className="text-sm font-mono">{selectedAccount.iban}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">SWIFT</Label>
+                  <p className="text-sm font-mono">{selectedAccount.swift}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsViewAccountDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Transaction Dialog */}
+      <Dialog open={isViewTransactionDialogOpen} onOpenChange={setIsViewTransactionDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Transaction ID</Label>
+                  <p className="text-lg font-semibold">{selectedTransaction.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Date</Label>
+                  <p className="text-lg font-semibold">{selectedTransaction.date}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Type</Label>
+                  <Badge variant={selectedTransaction.type === 'Credit' ? 'default' : 'destructive'}>
+                    {selectedTransaction.type}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Amount</Label>
+                  <p className={`text-lg font-semibold ${selectedTransaction.type === 'Credit' ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedTransaction.currency} {selectedTransaction.amount}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                  <p className="text-sm">{selectedTransaction.description}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Reference</Label>
+                  <p className="text-sm font-mono">{selectedTransaction.reference}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Account ID</Label>
+                  <p className="text-sm">{selectedTransaction.accountId}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Balance After</Label>
+                  <p className="text-lg font-semibold">{selectedTransaction.currency} {selectedTransaction.balance}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsViewTransactionDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Statement Dialog */}
+      <Dialog open={isViewStatementDialogOpen} onOpenChange={setIsViewStatementDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bank Statement Details</DialogTitle>
+          </DialogHeader>
+          {selectedStatement && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Statement ID</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Account ID</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.accountId}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Period</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.period}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                  <Badge variant={selectedStatement.status === 'Available' ? 'default' : 'secondary'}>
+                    {selectedStatement.status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Transactions</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.transactions}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Format</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.format}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Download Date</Label>
+                  <p className="text-lg font-semibold">{selectedStatement.downloadDate || 'Not downloaded'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsViewStatementDialogOpen(false)}>Close</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

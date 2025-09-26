@@ -906,12 +906,14 @@ const Treasury: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="accounts">Bank Accounts</TabsTrigger>
           <TabsTrigger value="transfers">Internal Transfers</TabsTrigger>
           <TabsTrigger value="investments">Investments</TabsTrigger>
           <TabsTrigger value="forecasting">Cash Forecasting</TabsTrigger>
+          <TabsTrigger value="risk">Risk Management</TabsTrigger>
+          <TabsTrigger value="liquidity">Liquidity Analysis</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -976,7 +978,7 @@ const Treasury: React.FC = () => {
                     <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                     Refresh
                   </Button>
-                  <Button onClick={() => toast({ title: 'Add Account', description: 'Opening bank account setup form' })}>
+                  <Button onClick={() => toast({ title: 'Account Management', description: 'Bank account management features would be handled by Bank Accounts module' })}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Account
                   </Button>
@@ -1009,7 +1011,7 @@ const Treasury: React.FC = () => {
                       New Transfer
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-2xl lg:max-w-4xl">
                     <DialogHeader>
                       <DialogTitle>Create Internal Transfer</DialogTitle>
                     </DialogHeader>
@@ -1170,7 +1172,7 @@ const Treasury: React.FC = () => {
                         Add Investment
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-md lg:max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>Add New Investment</DialogTitle>
                       </DialogHeader>
@@ -1281,7 +1283,7 @@ const Treasury: React.FC = () => {
           
           {/* Edit Investment Dialog */}
           <Dialog open={isEditInvestmentDialogOpen} onOpenChange={setIsEditInvestmentDialogOpen}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-md lg:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Edit Investment</DialogTitle>
               </DialogHeader>
@@ -1393,7 +1395,7 @@ const Treasury: React.FC = () => {
                         New Forecast
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-lg">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>Create Cash Flow Forecast</DialogTitle>
                       </DialogHeader>
@@ -1573,7 +1575,7 @@ const Treasury: React.FC = () => {
           
           {/* Edit Forecast Dialog */}
           <Dialog open={isEditForecastDialogOpen} onOpenChange={setIsEditForecastDialogOpen}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto sm:max-w-lg lg:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Edit Cash Flow Forecast</DialogTitle>
               </DialogHeader>
@@ -1715,6 +1717,301 @@ const Treasury: React.FC = () => {
               </Form>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        <TabsContent value="risk" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  FX Risk Exposure
+                  <Button size="sm" onClick={() => toast({ title: 'FX Risk Analysis', description: 'Opening detailed FX risk analysis' })}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Analyze
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">$2.4M</div>
+                      <div className="text-sm text-muted-foreground">EUR Exposure</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">$1.8M</div>
+                      <div className="text-sm text-muted-foreground">GBP Exposure</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Hedged Position</span>
+                      <span className="font-semibold">65%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Unhedged Risk</span>
+                      <span className="font-semibold text-red-600">$1.5M</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>VaR (95%)</span>
+                      <span className="font-semibold">$125,000</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  Interest Rate Risk
+                  <Button size="sm" onClick={() => toast({ title: 'Interest Rate Analysis', description: 'Opening interest rate sensitivity analysis' })}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Analyze
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">+2.5%</div>
+                      <div className="text-sm text-muted-foreground">Rate Sensitivity</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">$450K</div>
+                      <div className="text-sm text-muted-foreground">Impact +1%</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Duration Gap</span>
+                      <span className="font-semibold">1.2 years</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Repricing Gap</span>
+                      <span className="font-semibold">$3.2M</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>EVE Sensitivity</span>
+                      <span className="font-semibold text-orange-600">-8.5%</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                Hedging Instruments
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => toast({ title: 'New Hedge', description: 'Opening hedge creation wizard' })}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Hedge
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Report
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <div>Instrument</div>
+                  <div>Type</div>
+                  <div>Notional</div>
+                  <div>Status</div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">FX Forward #001</div>
+                    <div className="text-muted-foreground">EUR/USD</div>
+                  </div>
+                  <div>FX Forward</div>
+                  <div className="font-semibold">€1,000,000</div>
+                  <div>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">Interest Swap #002</div>
+                    <div className="text-muted-foreground">Fixed vs Floating</div>
+                  </div>
+                  <div>IRS</div>
+                  <div className="font-semibold">$5,000,000</div>
+                  <div>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium">FX Option #003</div>
+                    <div className="text-muted-foreground">GBP/USD Call</div>
+                  </div>
+                  <div>FX Option</div>
+                  <div className="font-semibold">£500,000</div>
+                  <div>
+                    <Badge variant="secondary">Expired</Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="liquidity" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Daily Liquidity Position</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600">$8.4M</div>
+                    <div className="text-sm text-muted-foreground">Current Position</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Inflows (Today)</span>
+                      <span className="font-semibold text-green-600">+$1.2M</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Outflows (Today)</span>
+                      <span className="font-semibold text-red-600">-$850K</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Net Position</span>
+                      <span className="font-semibold text-green-600">+$350K</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Liquidity Ratios</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">1.45</div>
+                    <div className="text-sm text-muted-foreground">Current Ratio</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Quick Ratio</span>
+                      <span className="font-semibold">1.25</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Cash Ratio</span>
+                      <span className="font-semibold">0.85</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Operating Cash Flow</span>
+                      <span className="font-semibold text-green-600">+$2.1M</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Liquidity Forecast</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">45 days</div>
+                    <div className="text-sm text-muted-foreground">Cash Runway</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>7-Day Forecast</span>
+                      <span className="font-semibold text-green-600">+$2.8M</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>30-Day Forecast</span>
+                      <span className="font-semibold text-orange-600">-$1.2M</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>90-Day Forecast</span>
+                      <span className="font-semibold text-red-600">-$4.5M</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                Liquidity Stress Testing
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => toast({ title: 'Run Stress Test', description: 'Running liquidity stress analysis' })}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Run Test
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Results
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-lg font-bold text-green-600">15 days</div>
+                    <div className="text-sm text-muted-foreground">Base Case</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-lg font-bold text-orange-600">8 days</div>
+                    <div className="text-sm text-muted-foreground">Moderate Stress</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-lg font-bold text-red-600">3 days</div>
+                    <div className="text-sm text-muted-foreground">Severe Stress</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-lg font-bold text-purple-600">1 day</div>
+                    <div className="text-sm text-muted-foreground">Extreme Stress</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h4 className="font-medium">Stress Test Scenarios</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-2">Market Disruption</div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>• 50% increase in margin calls</div>
+                        <div>• Credit line reductions</div>
+                        <div>• Market access limited</div>
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="font-medium mb-2">Credit Crisis</div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>• Counterparty defaults</div>
+                        <div>• Banking system stress</div>
+                        <div>• Liquidity freeze</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

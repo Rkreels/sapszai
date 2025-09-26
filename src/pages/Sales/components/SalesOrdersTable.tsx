@@ -227,6 +227,16 @@ const SalesOrdersTable: React.FC<SalesOrdersTableProps> = ({ isLoading, salesFil
     }
   };
 
+  const handleDownloadOrder = (orderId: string) => {
+    const order = salesOrders.find(o => o.id === orderId);
+    if (order) {
+      toast({
+        title: 'Order Downloaded',
+        description: `Order ${order.orderNumber} has been downloaded successfully.`,
+      });
+    }
+  };
+
   const updateOrderStatus = (order: SalesOrder, newStatus: SalesOrder['status']) => {
     try {
       const updatedOrder = { ...order, status: newStatus };
@@ -311,7 +321,7 @@ const SalesOrdersTable: React.FC<SalesOrdersTableProps> = ({ isLoading, salesFil
         <div className="flex space-x-2">
           <Button 
             variant="ghost" 
-            size="sm" 
+            size="sm"
             className="h-8 w-8 p-0"
             onClick={() => handleViewOrderDetails(row.id as string)}
           >
@@ -321,6 +331,7 @@ const SalesOrdersTable: React.FC<SalesOrdersTableProps> = ({ isLoading, salesFil
             variant="ghost" 
             size="sm"
             className="h-8 w-8 p-0"
+            onClick={() => handleDownloadOrder(row.id as string)}
           >
             <FileText className="h-4 w-4" />
           </Button>

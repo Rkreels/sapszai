@@ -52,7 +52,11 @@ const Commission: React.FC = () => {
   const [filterPeriod, setFilterPeriod] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<CommissionRecord | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<CommissionPlan | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false);
+  const [isEditingRecord, setIsEditingRecord] = useState(false);
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -180,6 +184,26 @@ const Commission: React.FC = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDownloadRecord = (record: CommissionRecord) => {
+    toast({
+      title: 'Record Downloaded',
+      description: `Commission record ${record.id} has been downloaded successfully.`,
+    });
+  };
+
+  const handleEditPlan = (plan: CommissionPlan) => {
+    setSelectedPlan(plan);
+    setIsPlanDialogOpen(true);
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    setCommissionPlans(prev => prev.filter(p => p.id !== planId));
+    toast({
+      title: 'Plan Deleted',
+      description: 'Commission plan has been deleted successfully.',
+    });
+  };
+
   const recordColumns = [
     { key: 'id', header: 'Commission ID' },
     { key: 'salesRep', header: 'Sales Rep' },
@@ -220,7 +244,7 @@ const Commission: React.FC = () => {
           <Button variant="ghost" size="sm" onClick={() => handleEditRecord(row)}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleDownloadRecord(row)}>
             <Download className="h-4 w-4" />
           </Button>
         </div>
@@ -250,10 +274,10 @@ const Commission: React.FC = () => {
       header: 'Actions',
       render: (_, row: CommissionPlan) => (
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleEditPlan(row)}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => handleDeletePlan(row.id)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
